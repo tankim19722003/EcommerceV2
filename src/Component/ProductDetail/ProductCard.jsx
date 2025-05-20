@@ -4,13 +4,13 @@ import ActionButtons from "./ActionButton";
 import ShippingInfo from "./ShippingInfo";
 import ProductImageSlider from "./ProductImageSlider";
 import ProductDetail from "./ProductDetail";
-import ProductCategor from "./ProductCategory";
-import ProductCategory from "./ProductCategory";
+import ProductCategoryTwoLevel from "./ProductCategoryTwoLevel";
+import ProductCategoryOneLevel from "./ProductCategoryOneLevel";
 
 // Main Product Card Component
- const ProductCard = ({ product }) => {
+const ProductCard = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
-
+  const [maxQuantity, setMaxQuantity] = useState(null);
   const productData = {
     name: "[CÓ SẴN] P-Bandai - RG 1/144 The Gundam Base Limited Sazabi [Mechanical Core Plating]",
     rating: 5.0,
@@ -22,18 +22,22 @@ import ProductCategory from "./ProductCategory";
     returnPolicy: "Trả hàng miễn phí 15 ngày. Bảo hiểm Thiết hại sản phẩm",
   };
 
+  function handleSetMaxQuantity(quantity) {
+    setMaxQuantity(quantity);
+  }
 
-  // handle price 
+  // handle price
   let price = 0;
   const productCategoryResponse = product.product_category_responses;
-  const productCategoryOneLevel = productCategoryResponse?.product_category_one_level_responses;
-  const productCategoryTwoLevel = productCategoryResponse?.product_category_two_level[0];
-  console.log(productCategoryTwoLevel);
-  console.log(productCategoryTwoLevel);
+  const productCategoryOneLevel =
+    productCategoryResponse?.product_category_one_level_responses;
+  let productCategoryTwoLevel;
+
   if (productCategoryOneLevel) {
     price = productCategoryOneLevel[0].price;
   } else if (productCategoryTwoLevel) {
     price = productCategoryTwoLevel.child_product_category_responses[0].price;
+    productCategoryResponse?.product_category_two_level_responses;
   }
 
   // console.log(product.product_category_responses);
@@ -44,7 +48,7 @@ import ProductCategory from "./ProductCategory";
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left: Image Slider */}
         {isSlider && <ProductImageSlider images={product.product_images} />}
-         {!isSlider && <ProductImageSlider images={ [1, 2, 3, 4]} />}
+        {!isSlider && <ProductImageSlider images={[1, 2, 3, 4]} />}
         {/* Right: Product Details */}
         <div>
           <ProductDetail
@@ -56,8 +60,30 @@ import ProductCategory from "./ProductCategory";
           <ShippingInfo
             productShippingTypes={product.product_shipping_type_responses}
           />
-          {productCategoryResponse && <ProductCategory data = {productCategoryResponse} />}
-          <QuantitySelector quantity={quantity} setQuantity={setQuantity} />
+          {productCategoryResponse?.product_category_two_level && (
+            <ProductCategoryTwoLevel
+              data={productCategoryResponse}
+              setMaxQuantity={handleSetMaxQuantity}
+              setQuantity={setQuantity}
+            />
+          )}
+
+          {productCategoryOneLevel && (
+            <ProductCategoryOneLevel
+              // data={productCategoryOneLevel}
+              // setMaxQuantity={handleSetMaxQuantity}
+              // setQuantity={setQuantity}
+              productCategoryResponses={productCategoryOneLevel}
+              setMaxProductCategory={handleSetMaxQuantity}
+            />
+          )}
+
+          <QuantitySelector
+            quantity={quantity}
+            setQuantity={setQuantity}
+            maxQuantity={maxQuantity}
+            isDisabled={maxQuantity === null}
+          />
           <ActionButtons />
         </div>
       </div>

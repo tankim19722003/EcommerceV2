@@ -8,11 +8,12 @@ const ProductImageSlider = ({ images }) => {
     setCurrentImage(index);
   };
 
+
   return (
     <div className="flex flex-col items-center">
       {/* Main Image Display */}
-      <div className="relative w-full h-64 bg-gray-200 flex items-center justify-center">
-        {images.length > 0 ? (
+      <div className="relative w-full h-80 bg-gray-200 flex items-center justify-center py-4">
+        {images.length > 0? (
           <img
             src={images[currentImage].avatar_url}
             alt={`Image ${currentImage + 1}`}
@@ -26,7 +27,7 @@ const ProductImageSlider = ({ images }) => {
           onClick={() =>
             setCurrentImage((prev) => (prev > 0 ? prev - 1 : images.length - 1))
           }
-          className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-300 p-2 rounded-full"
+          className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-300 p-2 rounded-full cursor-pointer"
         >
           &lt;
         </button>
@@ -34,7 +35,7 @@ const ProductImageSlider = ({ images }) => {
           onClick={() =>
             setCurrentImage((prev) => (prev < images.length - 1 ? prev + 1 : 0))
           }
-          className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-300 p-2 rounded-full"
+          className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-300 p-2 rounded-full cursor-pointer"
         >
           &gt;
         </button>
@@ -44,7 +45,7 @@ const ProductImageSlider = ({ images }) => {
       <div className="flex mt-4 space-x-2">
         {images.map((image, index) => (
           <div
-            key={image.public_id}
+            key={index}
             onClick={() => handleThumbnailClick(index)}
             className={`w-16 h-16 object-cover cursor-pointer flex items-center justify-center ${
               currentImage === index ? "border-2 border-red-500" : ""
