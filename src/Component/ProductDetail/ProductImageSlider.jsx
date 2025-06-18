@@ -12,7 +12,7 @@ const ProductImageSlider = ({ images }) => {
   return (
     <div className="flex flex-col items-center">
       {/* Main Image Display */}
-      <div className="relative w-full h-80 bg-gray-200 flex items-center justify-center py-4">
+      <div className="relative w-full h-80 bg-gray-200 flex items-center justify-center py-4 min-h-[400px]">
         {images.length > 0? (
           <img
             src={images[currentImage].avatar_url}

@@ -79,7 +79,7 @@ const ProductCategoryTwoLevel = ({ data, setMaxQuantity, setQuantity }) => {
                 <button
                   key={subCategory.id}
                   onClick={() => handleSubCategoryClick(subCategory)}
-                  className={`px-2 py-1 rounded-md shadow-sm text-center min-w-[90px] border ${
+                  className={`px-2 py-1 rounded-md shadow-sm text-center min-w-[90px] border min-h-[40px] ${
                     selectedSubCategory?.id === subCategory.id
                       ? "bg-blue-100 border-blue-500"
                       : "border-gray-200"

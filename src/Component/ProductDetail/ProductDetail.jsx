@@ -1,16 +1,43 @@
-// Product Details Component
-const ProductDetail = ({ name, rating, reviews, price }) => {
-  
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import ProductCard from "./ProductCard.jsx";
+import { getProductById } from "../../Http/ProductHttp.js";
+
+function ProductDetail() {
+  const [product, setProduct] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [error, setError] = useState("");
+  const { id } = useParams();
+  useEffect(() => {
+    async function fetchData() {
+      setIsFetching(true);
+      try {
+        const product = await getProductById(id);
+        setProduct(product);
+      } catch (err) {
+        setError(err.message);
+      }
+
+      setIsFetching(false);
+    }
+    fetchData();
+  }, []);
+
+  if (isFetching && !product) {
+    return <div className="text-center">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500">Error: {error}</div>;
+  }
+
   return (
-    <div className="mt-4">
-      <h1 className="text-xl font-bold">{name}</h1>
-      <div className="flex items-center mt-2">
-        <span className="text-yellow-500">{'★'.repeat(Math.floor(rating))}</span>
-        <span className="ml-2 text-gray-600">{rating.toFixed(1)} ({reviews} Đánh Giá)</span>
-        <span className="ml-2 text-green-600">Tố Cao</span>
+    <div>
+      <div className="max-w-6xl mx-auto  ">
+        {product && <ProductCard product={product} />}
       </div>
-      <p className="text-2xl text-red-500 font-bold mt-2">{price.toLocaleString()}đ</p>
     </div>
   );
-};
+}
+
 export default ProductDetail;

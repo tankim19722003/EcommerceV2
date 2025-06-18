@@ -1,13 +1,13 @@
-import visa from "../assets/visa.png";
-import mastercard from "../assets/mastercard.webp";
-import sacombank from "../assets/sacombank.png";
-import qr from "../assets/qr.jpg";
-import appstore from "../assets/appstore.webp";
-import googleplay from "../assets/googleplay.jpg";
-import appgallery from "../assets/appgallery.png";
+import visa from "../../assets/visa.png";
+import mastercard from "../../assets/mastercard.webp";
+import sacombank from "../../assets/sacombank.png";
+import qr from "../../assets/qr.jpg";
+import appstore from "../../assets/appstore.webp";
+import googleplay from "../../assets/googleplay.jpg";
+import appgallery from "../../assets/appgallery.png";
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 py-10">
+    <footer className="bg-gray-100 py-10 border-t border-t-amber-700 mt-14">
       <div className="container mx-auto grid grid-cols-5 gap-8 px-6">
         <div>
           <h3 className="font-bold mb-4">DỊCH VỤ KHÁCH HÀNG</h3>

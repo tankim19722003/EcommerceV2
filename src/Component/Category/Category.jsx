@@ -1,6 +1,5 @@
-import CategoryItem from './CategoryItem';
+import CategoryItem from '../CategoryItem/CategoryItem';
 import { useEffect, useState } from 'react';
-import { fetchData } from '../Http/ProductHttp';
 
 let initialValue =[];
 const Category = () => {
