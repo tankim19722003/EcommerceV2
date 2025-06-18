@@ -37,11 +37,10 @@ const CategoryManagement = () => {
     categoryId: null,
     subcategoryId: null,
     name: "",
-    attributeId: null, // Added to store selected attribute ID
+    attributeId: null,
   });
-  const [attributes, setAttributes] = useState([]); // State for attribute list
+  const [attributes, setAttributes] = useState([]);
 
-  // Fetch categories and attributes on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -72,7 +71,6 @@ const CategoryManagement = () => {
     fetchAttributes();
   }, []);
 
-  // Fetch subcategories when a category is clicked
   const fetchSubcategories = async (categoryId) => {
     try {
       setIsFetching(true);
@@ -93,7 +91,6 @@ const CategoryManagement = () => {
     }
   };
 
-  // Handle category click to toggle subcategories
   const handleCategoryClick = (categoryId) => {
     if (expandedCategoryId === categoryId) {
       setExpandedCategoryId(null);
@@ -106,12 +103,10 @@ const CategoryManagement = () => {
     }
   };
 
-  // Handle opening inline input for add
   const startAdd = (type, categoryId = null, subcategoryId = null) => {
     setAddState({ type, categoryId, subcategoryId, name: "", attributeId: null });
   };
 
-  // Handle opening inline input for edit
   const startEdit = (type, item, categoryId = null, subcategoryId = null) => {
     setEditState({
       type,
@@ -122,7 +117,6 @@ const CategoryManagement = () => {
     });
   };
 
-  // Handle input change for add/edit
   const handleInputChange = (e, isEdit = false) => {
     const state = isEdit ? editState : addState;
     const setState = isEdit ? setEditState : setAddState;
@@ -130,7 +124,6 @@ const CategoryManagement = () => {
     setState({ ...state, [e.target.name]: value });
   };
 
-  // Handle form submission for add/edit
   const handleSubmit = async (e, isEdit = false) => {
     e.preventDefault();
     const state = isEdit ? editState : addState;
@@ -146,8 +139,8 @@ const CategoryManagement = () => {
           setIsFetching(true);
           const newCategory = await createCategory({ name });
           setCategories([
-            ...categories,
             { id: newCategory.id, name, subcategories: [] },
+            ...categories,
           ]);
           setIsFetching(false);
           Swal.fire("Success!", "Tạo danh mục thành công!", "success");
@@ -180,8 +173,8 @@ const CategoryManagement = () => {
                 ? {
                     ...cat,
                     subcategories: [
-                      ...cat.subcategories,
                       { id: newSubcategory.id, name, attributes: [] },
+                      ...cat.subcategories,
                     ],
                   }
                 : cat
@@ -218,13 +211,10 @@ const CategoryManagement = () => {
       } else {
         try {
           setIsFetching(true);
-          
-          // Associate attribute with subcategory
-         await createSubcategoryAttribute({
-                subcategory_id: subcategoryId,
-                attribute_id: attributeId,
-              })
-          // Update state with selected attribute
+          await createSubcategoryAttribute({
+            subcategory_id: subcategoryId,
+            attribute_id: attributeId,
+          });
           const selectedAttribute = attributes.find(
             (attr) => attr.id === attributeId
           );
@@ -238,8 +228,8 @@ const CategoryManagement = () => {
                         ? {
                             ...sub,
                             attributes: [
-                              ...sub.attributes,
                               { id: selectedAttribute.id, name: selectedAttribute.name },
+                              ...sub.attributes,
                             ],
                           }
                         : sub
@@ -272,7 +262,6 @@ const CategoryManagement = () => {
     });
   };
 
-  // Handle cancel for add/edit
   const handleCancel = (isEdit = false) => {
     if (isEdit) {
       setEditState({
@@ -293,7 +282,6 @@ const CategoryManagement = () => {
     }
   };
 
-  // Handle delete actions
   const handleDeleteCategory = (id) => {
     setCategories(categories.filter((cat) => cat.id !== id));
     if (expandedCategoryId === id) {
@@ -340,106 +328,107 @@ const CategoryManagement = () => {
 
   if (isFetching) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <ClipLoader color="#36d7b7" loading={true} size={50} />
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <ClipLoader color="#3b82fWORD6" loading={true} size={50} />
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
       {/* Tab Navigation */}
-      <div className="mb-6">
-        <div className="flex space-x-4 border-b border-gray-200">
+      <div className="mb-6 border-b border-gray-200">
+        <div className="flex space-x-4">
           <button
-            className={`px-4 py-2 text-sm font-medium ${
+            className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               activeTab === "categories"
                 ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-600 hover:text-blue-600"
+                : "text-gray-600 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("categories")}
           >
-            Quản lí danh mục
+            Quản lý danh mục
           </button>
           <button
-            className={`px-4 py-2 text-sm font-medium ${
+            className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               activeTab === "createAttribute"
                 ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-600 hover:text-blue-600"
+                : "text-gray-600 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"
             }`}
             onClick={() => setActiveTab("createAttribute")}
           >
-            Quản lí thuộc tính
+            Quản lý thuộc tính
           </button>
         </div>
       </div>
 
       {/* Category Management Tab */}
       {activeTab === "categories" && (
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold text-gray-700">
-              Quản lí danh mục
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-gray-800">
+              Quản lý danh mục
             </h3>
             {addState.type !== "category" ? (
               <button
                 onClick={() => startAdd("category")}
-                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-1"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium shadow-sm"
               >
                 <Plus size={16} /> Thêm danh mục
               </button>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
                 <input
                   type="text"
+                  name="name"
                   value={addState.name}
                   onChange={(e) => handleInputChange(e, false)}
                   placeholder="Nhập tên danh mục"
-                  className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-48"
+                  className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64 transition-shadow duration-200"
                 />
                 <button
                   onClick={(e) => handleSubmit(e, false)}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
                   disabled={!addState.name}
                 >
                   <Check size={16} /> Thêm
                 </button>
                 <button
                   onClick={() => handleCancel(false)}
-                  className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-sm flex items-center gap-1"
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                 >
                   <X size={16} /> Hủy
                 </button>
               </div>
             )}
           </div>
-          <div className="bg-white rounded-lg shadow-sm">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <ul className="divide-y divide-gray-200">
               {categories.map((category) => (
-                <li key={category.id} className="px-6 py-4">
+                <li key={category.id} className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150">
                   <div
-                    className="flex justify-between items-center mb-2 cursor-pointer"
+                    className="flex justify-between items-center mb-3 cursor-pointer"
                     onClick={() => handleCategoryClick(category.id)}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <span className="text-sm font-semibold text-gray-800">
                         {category.name}
                       </span>
                       {expandedCategoryId === category.id ? (
-                        <ChevronUp size={16} />
+                        <ChevronUp size={16} className="text-gray-600" />
                       ) : (
-                        <ChevronDown size={16} />
+                        <ChevronDown size={16} className="text-gray-600" />
                       )}
                     </div>
                     {editState.type !== "category" ||
                     editState.id !== category.id ? (
-                      <div className="flex gap-2">
+                      <div className="flex gap-3">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             startEdit("category", category);
                           }}
-                          className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm flex items-center gap-1"
+                          className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                         >
                           <Edit size={16} /> Chỉnh sửa
                         </button>
@@ -448,27 +437,28 @@ const CategoryManagement = () => {
                             e.stopPropagation();
                             handleDeleteCategory(category.id);
                           }}
-                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm flex items-center gap-1"
+                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                         >
-                          <Trash size={16} /> Delete
+                          <Trash size={16} /> Xóa
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             startAdd("subcategory", category.id);
                           }}
-                          className="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm flex items-center gap-1"
+                          className="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                         >
                           <Plus size={16} /> Thêm danh mục con
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
                         <input
                           type="text"
+                          name="name"
                           value={editState.name}
                           onChange={(e) => handleInputChange(e, true)}
-                          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-48"
+                          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64 transition-shadow duration-200"
                           onClick={(e) => e.stopPropagation()}
                         />
                         <button
@@ -476,7 +466,7 @@ const CategoryManagement = () => {
                             e.stopPropagation();
                             handleSubmit(e, true);
                           }}
-                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
                           disabled={!editState.name}
                         >
                           <Check size={16} /> Cập nhật
@@ -486,7 +476,7 @@ const CategoryManagement = () => {
                             e.stopPropagation();
                             handleCancel(true);
                           }}
-                          className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-sm flex items-center gap-1"
+                          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                         >
                           <X size={16} /> Hủy
                         </button>
@@ -495,24 +485,25 @@ const CategoryManagement = () => {
                   </div>
                   {addState.type === "subcategory" &&
                     addState.categoryId === category.id && (
-                      <div className="ml-6 mb-2 flex items-center gap-2 bg-gray-50 p-2 rounded-md">
+                      <div className="ml-8 mb-3 flex items-center gap-3 bg-gray-100 p-3 rounded-lg shadow-sm">
                         <input
                           type="text"
+                          name="name"
                           value={addState.name}
                           onChange={(e) => handleInputChange(e, false)}
-                          placeholder="Enter subcategory name"
-                          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-48"
+                          placeholder="Nhập tên danh mục con"
+                          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64 transition-shadow duration-200"
                         />
                         <button
                           onClick={(e) => handleSubmit(e, false)}
-                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
                           disabled={!addState.name}
                         >
                           <Check size={16} /> Thêm
                         </button>
                         <button
                           onClick={() => handleCancel(false)}
-                          className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-sm flex items-center gap-1"
+                          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                         >
                           <X size={16} /> Hủy
                         </button>
@@ -520,43 +511,44 @@ const CategoryManagement = () => {
                     )}
                   {expandedCategoryId === category.id &&
                     category.subcategories.length > 0 && (
-                      <ul className="ml-6 divide-y divide-gray-100">
+                      <ul className="ml-8 divide-y divide-gray-100">
                         {category.subcategories.map((subcategory) => (
                           <li
                             key={subcategory.id}
-                            className="py-2 bg-gray-50 rounded-md my-1 px-2"
+                            className="py-3 bg-gray-50 rounded-lg my-2 px-4 hover:bg-gray-100 transition-colors duration-150"
                           >
                             <div className="flex justify-between items-center">
                               {editState.type === "subcategory" &&
                               editState.id === subcategory.id &&
                               editState.categoryId === category.id ? (
-                                <div className="flex items-center gap-2 w-full">
+                                <div className="flex items-center gap-3 w-full bg-white p-3 rounded-lg shadow-sm">
                                   <input
                                     type="text"
+                                    name="name"
                                     value={editState.name}
                                     onChange={(e) => handleInputChange(e, true)}
-                                    className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-48"
+                                    className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64 transition-shadow duration-200"
                                   />
                                   <button
                                     onClick={(e) => handleSubmit(e, true)}
-                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
                                     disabled={!editState.name}
                                   >
                                     <Check size={16} /> Cập nhật
                                   </button>
                                   <button
                                     onClick={() => handleCancel(true)}
-                                    className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-sm flex items-center gap-1"
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                   >
                                     <X size={16} /> Hủy
                                   </button>
                                 </div>
                               ) : (
                                 <>
-                                  <span className="text-sm text-gray-700 border-l-2 border-gray-400 pl-3">
+                                  <span className="text-sm font-medium text-gray-700 border-l-4 border-blue-400 pl-3">
                                     {subcategory.name}
                                   </span>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-3">
                                     <button
                                       onClick={() =>
                                         startEdit(
@@ -565,9 +557,9 @@ const CategoryManagement = () => {
                                           category.id
                                         )
                                       }
-                                      className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm flex items-center gap-1"
+                                      className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                     >
-                                      <Edit size={16} /> Edit
+                                      <Edit size={16} /> Sửa
                                     </button>
                                     <button
                                       onClick={() =>
@@ -576,9 +568,9 @@ const CategoryManagement = () => {
                                           subcategory.id
                                         )
                                       }
-                                      className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm flex items-center gap-1"
+                                      className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                     >
-                                      <Trash size={16} /> Delete
+                                      <Trash size={16} /> Xóa
                                     </button>
                                     <button
                                       onClick={() =>
@@ -588,7 +580,7 @@ const CategoryManagement = () => {
                                           subcategory.id
                                         )
                                       }
-                                      className="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm flex items-center gap-1"
+                                      className="px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                     >
                                       <Plus size={16} /> Thêm thuộc tính
                                     </button>
@@ -599,15 +591,15 @@ const CategoryManagement = () => {
                             {addState.type === "attribute" &&
                               addState.categoryId === category.id &&
                               addState.subcategoryId === subcategory.id && (
-                                <div className="ml-8 mt-1.5 flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+                                <div className="ml-6 mt-3 flex items-center gap-3 bg-gray-100 p-3 rounded-lg shadow-sm">
                                   <select
                                     name="attributeId"
                                     value={addState.attributeId || ""}
                                     onChange={(e) => handleInputChange(e, false)}
-                                    className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-48"
+                                    className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64 transition-shadow duration-200 bg-white"
                                   >
                                     <option value="" disabled>
-                                      Select attribute
+                                      Chọn thuộc tính
                                     </option>
                                     {attributes.map((attr) => (
                                       <option key={attr.id} value={attr.id}>
@@ -617,60 +609,61 @@ const CategoryManagement = () => {
                                   </select>
                                   <button
                                     onClick={(e) => handleSubmit(e, false)}
-                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
                                     disabled={!addState.attributeId}
                                   >
-                                    <Check size={16} /> Add
+                                    <Check size={16} /> Thêm
                                   </button>
                                   <button
                                     onClick={() => handleCancel(false)}
-                                    className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-sm flex items-center gap-1"
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                   >
-                                    <X size={16} /> Cancel
+                                    <X size={16} /> Hủy
                                   </button>
                                 </div>
                               )}
                             {subcategory.attributes.length > 0 && (
-                              <ul className="ml-8 mt-1.5">
+                              <ul className="ml-6 mt-3 space-y-2">
                                 {subcategory.attributes.map((attribute) => (
                                   <li
                                     key={attribute.id}
-                                    className="flex justify-between items-center text-sm text-gray-600 bg-gray-100 rounded-md my-1 px-2 py-1"
+                                    className="flex justify-between items-center text-sm text-gray-600 bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition-colors duration-150 shadow-sm"
                                   >
                                     {editState.type === "attribute" &&
                                     editState.id === attribute.id &&
                                     editState.categoryId === category.id &&
                                     editState.subcategoryId ===
                                       subcategory.id ? (
-                                      <div className="flex items-center gap-2 w-full">
+                                      <div className="flex items-center gap-3 w-full bg-white p-3 rounded-lg shadow-sm">
                                         <input
                                           type="text"
+                                          name="name"
                                           value={editState.name}
                                           onChange={(e) =>
                                             handleInputChange(e, true)
                                           }
-                                          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-48"
+                                          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64 transition-shadow duration-200"
                                         />
                                         <button
                                           onClick={(e) => handleSubmit(e, true)}
-                                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
+                                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
                                           disabled={!editState.name}
                                         >
-                                          <Check size={16} /> Update
+                                          <Check size={16} /> Cập nhật
                                         </button>
                                         <button
                                           onClick={() => handleCancel(true)}
-                                          className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-sm flex items-center gap-1"
+                                          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                         >
-                                          <X size={16} /> Cancel
+                                          <X size={16} /> Hủy
                                         </button>
                                       </div>
                                     ) : (
                                       <>
-                                        <span className="border-l-2 border-gray-400 pl-3">
+                                        <span className="border-l-4 border-green-400 pl-3 font-medium">
                                           {attribute.name}
                                         </span>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-3">
                                           <button
                                             onClick={() =>
                                               startEdit(
@@ -680,9 +673,9 @@ const CategoryManagement = () => {
                                                 subcategory.id
                                               )
                                             }
-                                            className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm flex items-center gap-1"
+                                            className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                           >
-                                            <Edit size={16} /> Edit
+                                            <Edit size={16} /> Sửa
                                           </button>
                                           <button
                                             onClick={() =>
@@ -692,9 +685,9 @@ const CategoryManagement = () => {
                                                 attribute.id
                                               )
                                             }
-                                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm flex items-center gap-1"
+                                            className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center gap-2 text-sm shadow-sm"
                                           >
-                                            <Trash size={16} /> Delete
+                                            <Trash size={16} /> Xóa
                                           </button>
                                         </div>
                                       </>
