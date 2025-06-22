@@ -12,6 +12,10 @@ import SalesManagement from "./Component/AdminComponent/SalesManagement";
 import OverviewSection from "./Component/AdminComponent/OverviewSection";
 import AdminLayout from "./layouts/AdminLayout";
 import ProductManagement from "./Component/AdminComponent/ProductManagement";
+import ShopLayOut from "./layouts/ShopLayout";
+import ShopOverview from "./Component/ShopComponent/Overview";
+import NotFound from "./page/NotFound";
+import ProductCreation from "./Component/ShopComponent/ProductCreation";
 
 export const router = createBrowserRouter([
   {
@@ -30,14 +34,24 @@ export const router = createBrowserRouter([
     path: "/admin",
     element: <AdminLayout />,
     children: [
-       { index: true, element: <OverviewSection /> },
+      { index: true, element: <OverviewSection /> },
       { path: "orders", element: <OrderManagement /> },
       { path: "categories", element: <CategoryManagement /> },
       { path: "sales", element: <SalesManagement /> },
       { path: "products", element: <ProductManagement /> },
-
-    ]
-  }
+    ],
+  },
+  {
+    path: "/shop",
+    element: <ShopLayOut />,
+    children: [
+      { index: true, element: <ShopOverview /> },
+      { path: "product-management", element: <ProductManagement /> },
+      { path: "product-creation", element: <ProductCreation /> },
+    ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
 ]);
-
-

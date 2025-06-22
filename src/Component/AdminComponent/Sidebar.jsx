@@ -6,6 +6,7 @@ import {
   Layers,
   BarChart2,
   LogOut,
+  Store,
 } from "lucide-react";
 
 const navItems = [
@@ -33,11 +34,13 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         isSidebarOpen ? "left-0" : "-left-64"
       }`}
     >
-      <div className="flex items-center mb-8">
+      <div className="flex items-center gap-3 mb-8">
+        <Store size={28} className="text-teal-600" />
         <h2 className="text-2xl font-extrabold tracking-tight text-teal-600">
-          Shop Mind Admin
+          Shop Mind
         </h2>
       </div>
+
       <nav className="flex-grow overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
@@ -57,12 +60,13 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           </NavLink>
         ))}
       </nav>
+
       <button
         onClick={handleLogout}
         className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 text-sm font-semibold shadow-md flex items-center gap-2"
       >
         <LogOut size={18} />
-        Đăng xuất 
+        Đăng xuất
       </button>
     </aside>
   );
