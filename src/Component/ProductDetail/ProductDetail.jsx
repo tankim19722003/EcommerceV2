@@ -13,6 +13,8 @@ function ProductDetail() {
       setIsFetching(true);
       try {
         const product = await getProductById(id);
+        console.log("Product detail");
+        console.log(product);
         setProduct(product);
       } catch (err) {
         setError(err.message);

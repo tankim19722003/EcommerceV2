@@ -22,16 +22,10 @@ const EmailConfirmation = ({ account, password, handleCreateUser }) => {
     return () => clearInterval(timer);
   }, [resendTimer]);
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   console.log("Entered code:", code);
-  //   // Call API to verify code
-  // };
 
   const handleResend = () => {
     if (!canResend) return;
 
-    console.log("Resending code...");
     // Call API to resend code
     setResendTimer(60); // restart timer
   };

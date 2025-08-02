@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import QuantitySelector from "./QuantitySelecter";
 import ActionButtons from "./ActionButton";
 import ShippingInfo from "./ShippingInfo";
@@ -10,62 +10,126 @@ import ProductAttribute from "./ProductAttribute";
 import ProductDescription from "./ProductDescription";
 import ProductReview from "./ProductReview";
 import ProductInfo from "./ProductInfo";
-import { fetchData } from "../../Http/ProductHttp";
+import { useNavigate } from "react-router-dom";
+import { addItemToCart } from "../../Http/CartHttp";
+import Swal from "sweetalert2";
 
 // Main Product Card Component
-
-const article = `
-UTEE BRAND ® Basic Cuban Shirt
-
-• Chất liệu : Premium COTTON silk - Mềm mịn, dày dặn, không nhăn, không ra màu kể cả khi giặt máy.
-• Size: M / L / XL
-• Chữ UTEE STUDIO thương hiệu được thêu tỉ mỉ, tinh tế.
-
-Xem từng ảnh để thấy những chi tiết thú vị nhé!
-
-Được chăm chút từ chất liệu, form dáng, đường may, hình in cho đến khâu đóng gói và hậu mãi, chiếc sơ mi Cuban xinh xẻo này sẽ làm hài lòng cả những vị khách khó tính nhất.
-
-#thoitrangnam #thoitrangnu #somi #unisex #u.tee #giamgiamanh #giamgia #sơmi #unisex #utee #cottonlạnhsiêumátsiêudẹp #cottonlanh
-#somioversize #somicaocap #sominam
-#aki #utee #tshirt #somi #unisex #streetstyle
-`;
-
 const ProductCard = ({ product }) => {
+  const [quantity, setQuantity] = useState(1);
+  const [maxQuantity, setMaxQuantity] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const navigate = useNavigate();
+
   if (product === null) {
     return <p className="text-center text-red-500">Sản phẩm không tồn tại</p>;
   }
-  const [quantity, setQuantity] = useState(1);
-  const [maxQuantity, setMaxQuantity] = useState(null);
 
   function handleSetMaxQuantity(quantity) {
     setMaxQuantity(quantity);
   }
 
-  // handle price
   let price = 0;
   const productCategoryResponse = product.product_category_responses;
-  const productCategoryOneLevel =
-    productCategoryResponse?.product_category_one_level_responses;
-  let productCategoryTwoLevel;
+  const productCategoryOneLevel = productCategoryResponse?.product_category_one_level_responses;
+  const productCategoryTwoLevel = productCategoryResponse?.product_category_two_level;
 
-  if (productCategoryOneLevel) {
+  if (productCategoryOneLevel?.length > 0) {
     price = productCategoryOneLevel[0].price;
-  } else if (productCategoryTwoLevel) {
-    price = productCategoryTwoLevel.child_product_category_responses[0].price;
-    productCategoryResponse?.product_category_two_level_responses;
+  } else if (productCategoryTwoLevel?.length > 0) {
+    price = productCategoryTwoLevel[0].child_product_category_responses[0].price;
   }
 
-  // console.log(product.product_category_responses);
   const isSlider = product.product_images?.length > 0;
+
+
+  const handleBuyNow = async () => {
+    try {
+      const cartItemId = await handleAddToCart();
+      navigate("/cart", { state: { selectedCartItemId: cartItemId } });
+    } catch (error) {
+      // Error already handled in handleAddToCart
+    }
+  };
+  const handleAddToCart = async () => {
+  try {
+    // ─── Xác định category/subcategory như bạn đã làm ──────────────
+    let product_category_id = "";
+    let product_subcategory_id = "";
+
+    if (selectedCategory) {
+      if (productCategoryOneLevel?.length > 0) {
+        product_category_id = selectedCategory.id;
+      } else if (productCategoryTwoLevel?.length > 0) {
+        product_category_id = findParentCategoryById(selectedCategory.id).product_category_response.id;
+        product_subcategory_id = selectedCategory.id;
+      }
+    } else {
+      if (productCategoryOneLevel?.length > 0) {
+        product_category_id = productCategoryOneLevel[0].id;
+      } else if (productCategoryTwoLevel?.length > 0) {
+        product_category_id = productCategoryTwoLevel[0].id;
+        product_subcategory_id =
+          productCategoryTwoLevel[0].child_product_category_responses[0].id;
+      }
+    }
+
+    const cartData = {
+      product_id: product.product_basic_info.product_id,
+      quantity,
+      product_category_id,
+      product_subcategory_id,
+    };
+
+    // ─── Gọi API ──────────────────────────────────────────────────
+    const cartItem = await addItemToCart(cartData);
+
+    // ─── SweetAlert thành công ───────────────────────────────────
+    Swal.fire({
+      icon: "success",
+      title: "Đã thêm vào giỏ!",
+      text: "Sản phẩm đã được thêm vào giỏ hàng của bạn.",
+      confirmButtonColor: "#3085d6",
+    });
+
+    return cartItem.id;
+
+    // Optional: navigate("/cart");
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+
+    // ─── SweetAlert lỗi ──────────────────────────────────────────
+    Swal.fire({
+      icon: "error",
+      title: "Thao tác thất bại",
+      text: "Không thể thêm sản phẩm. Vui lòng thử lại!",
+      confirmButtonColor: "#d33",
+    });
+  }
+};
+
+const findParentCategoryById = (childId) => {
+  for (const category of productCategoryTwoLevel) {
+    const matchingChild = category.child_product_category_responses.find(
+      (subCategory) => subCategory.id === childId
+    );
+    if (matchingChild) {
+      return category;
+    }
+  }
+  return null;
+};
+
 
   return (
     <div className="bg-[#f5f5f5]">
       <div className="rounded overflow-hidden shadow-lg bg-white p-6 my-4 border border-gray-100 min-h-[500px]">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left: Image Slider */}
-          {isSlider && <ProductImageSlider images={product.product_images} />}
-          {!isSlider && <ProductImageSlider images={[1, 2, 3, 4]} />}
-          {/* Right: Product Details */}
+          {isSlider ? (
+            <ProductImageSlider images={product.product_images} />
+          ) : (
+            <ProductImageSlider images={[1, 2, 3, 4]} />
+          )}
           <div>
             <ProductInfo
               name={product.product_basic_info.name}
@@ -76,48 +140,44 @@ const ProductCard = ({ product }) => {
             <ShippingInfo
               productShippingTypes={product.product_shipping_type_responses}
             />
-            {productCategoryResponse?.product_category_two_level && (
+            {productCategoryTwoLevel?.length > 0 && (
               <ProductCategoryTwoLevel
                 data={productCategoryResponse}
                 setMaxQuantity={handleSetMaxQuantity}
                 setQuantity={setQuantity}
+                setSelectedCategory={setSelectedCategory}
               />
             )}
-
-            {productCategoryOneLevel && (
+            {productCategoryOneLevel?.length > 0 && (
               <ProductCategoryOneLevel
-                // data={productCategoryOneLevel}
-                // setMaxQuantity={handleSetMaxQuantity}
-                // setQuantity={setQuantity}
                 productCategoryResponses={productCategoryOneLevel}
                 setMaxProductCategory={handleSetMaxQuantity}
+                setSelectedCategory={setSelectedCategory}
               />
             )}
-
             <QuantitySelector
               quantity={quantity}
               setQuantity={setQuantity}
               maxQuantity={maxQuantity}
               isDisabled={maxQuantity === null}
             />
-            <ActionButtons />
+            <ActionButtons
+              onBuyNow={handleBuyNow}
+              onAddToCart={handleAddToCart} // Pass the new function
+            />
           </div>
         </div>
       </div>
-
       <Shop shopInfo={product.shop_response} />
-
       <ProductAttribute
         productAttributes={product.product_attribute_value_responses}
       />
-
       <ProductDescription
         description={product.product_basic_info.description}
       />
-
-      <ProductReview />
+      <ProductReview ratingSumarry = {product.product_rating_counts} productRating={product.product_basic_info.rating}/>
     </div>
   );
 };
-// Product Image Slider Component
+
 export default ProductCard;

@@ -15,10 +15,10 @@ import {
   getSubcategoryByCategoryId,
 } from "../../Http/CategoryHttp";
 import Swal from "sweetalert2";
-import { ClipLoader } from "react-spinners";
 import AttributeTab from "./AttributeTab";
 import { getAttributes } from "../../Http/AttributeHttp";
 import { createSubcategoryAttribute } from "../../Http/SubcategoryAttributeHttp";
+import EcommerceSpinner from "../Share/EcommerceSpinner";
 
 const CategoryManagement = () => {
   const [isFetching, setIsFetching] = useState(false);
@@ -51,10 +51,10 @@ const CategoryManagement = () => {
           subcategories: category.subcategories || [],
         }));
         setCategories(formattedData);
-        setIsFetching(false);
       } catch (error) {
-        setIsFetching(false);
         Swal.fire("Error!", "Failed to fetch categories!", "error");
+      } finally {
+        setIsFetching(false);
       }
     };
 
@@ -84,10 +84,10 @@ const CategoryManagement = () => {
           cat.id === categoryId ? { ...cat, subcategories: formattedData } : cat
         )
       );
-      setIsFetching(false);
     } catch (error) {
-      setIsFetching(false);
       Swal.fire("Error!", `Danh mục với ID ${categoryId} không tồn tại`, "error");
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -120,7 +120,8 @@ const CategoryManagement = () => {
   const handleInputChange = (e, isEdit = false) => {
     const state = isEdit ? editState : addState;
     const setState = isEdit ? setEditState : setAddState;
-    const value = e.target.name === "attributeId" ? Number(e.target.value) : e.target.value;
+    const value =
+      e.target.name === "attributeId" ? Number(e.target.value) : e.target.value;
     setState({ ...state, [e.target.name]: value });
   };
 
@@ -134,6 +135,7 @@ const CategoryManagement = () => {
         setCategories(
           categories.map((cat) => (cat.id === id ? { ...cat, name } : cat))
         );
+        Swal.fire("Success!", "Cập nhật danh mục thành công!", "success");
       } else {
         try {
           setIsFetching(true);
@@ -142,11 +144,11 @@ const CategoryManagement = () => {
             { id: newCategory.id, name, subcategories: [] },
             ...categories,
           ]);
-          setIsFetching(false);
           Swal.fire("Success!", "Tạo danh mục thành công!", "success");
         } catch (error) {
+          Swal.fire("Error!", "Tạo danh mục thất bại!", "error");
+        } finally {
           setIsFetching(false);
-          Swal.fire("Oops!", "Tạo danh mục thất bại!", "error");
         }
       }
     } else if (type === "subcategory") {
@@ -163,6 +165,7 @@ const CategoryManagement = () => {
               : cat
           )
         );
+        Swal.fire("Success!", "Cập nhật danh mục con thành công!", "success");
       } else {
         try {
           setIsFetching(true);
@@ -180,14 +183,18 @@ const CategoryManagement = () => {
                 : cat
             )
           );
-          setIsFetching(false);
           Swal.fire("Success!", "Tạo danh mục con thành công!", "success");
         } catch (error) {
-          setIsFetching(false);
           Swal.fire("Error!", "Tạo danh mục con thất bại!", "error");
+        } finally {
+          setIsFetching(false);
         }
       }
     } else if (type === "attribute") {
+      if (!attributeId) {
+        Swal.fire("Error!", "Vui lòng chọn một thuộc tính!", "error");
+        return;
+      }
       if (isEdit) {
         setCategories(
           categories.map((cat) =>
@@ -208,16 +215,20 @@ const CategoryManagement = () => {
               : cat
           )
         );
+        Swal.fire("Success!", "Cập nhật thuộc tính thành công!", "success");
       } else {
         try {
           setIsFetching(true);
-          await createSubcategoryAttribute({
+          const response = await createSubcategoryAttribute({
             subcategory_id: subcategoryId,
             attribute_id: attributeId,
           });
           const selectedAttribute = attributes.find(
             (attr) => attr.id === attributeId
           );
+          if (!selectedAttribute) {
+            throw new Error("Thuộc tính không tồn tại");
+          }
           setCategories(
             categories.map((cat) =>
               cat.id === categoryId
@@ -228,7 +239,10 @@ const CategoryManagement = () => {
                         ? {
                             ...sub,
                             attributes: [
-                              { id: selectedAttribute.id, name: selectedAttribute.name },
+                              {
+                                id: response.id || attributeId, // Use response.id if API returns it
+                                name: selectedAttribute.name,
+                              },
                               ...sub.attributes,
                             ],
                           }
@@ -238,11 +252,15 @@ const CategoryManagement = () => {
                 : cat
             )
           );
-          setIsFetching(false);
           Swal.fire("Success!", "Thêm thuộc tính thành công!", "success");
         } catch (error) {
+          Swal.fire(
+            "Error!",
+            error.message || "Thêm thuộc tính thất bại!",
+            "error"
+          );
+        } finally {
           setIsFetching(false);
-          Swal.fire("Error!", "Thêm thuộc tính thất bại!", "error");
         }
       }
     }
@@ -287,6 +305,7 @@ const CategoryManagement = () => {
     if (expandedCategoryId === id) {
       setExpandedCategoryId(null);
     }
+    Swal.fire("Success!", "Xóa danh mục thành công!", "success");
   };
 
   const handleDeleteSubcategory = (categoryId, subcategoryId) => {
@@ -302,6 +321,7 @@ const CategoryManagement = () => {
           : cat
       )
     );
+    Swal.fire("Success!", "Xóa danh mục con thành công!", "success");
   };
 
   const handleDeleteAttribute = (categoryId, subcategoryId, attributeId) => {
@@ -324,14 +344,11 @@ const CategoryManagement = () => {
           : cat
       )
     );
+    Swal.fire("Success!", "Xóa thuộc tính thành công!", "success");
   };
 
   if (isFetching) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <ClipLoader color="#3b82fWORD6" loading={true} size={50} />
-      </div>
-    );
+    return <EcommerceSpinner text="Đang tải dữ liệu..." />;
   }
 
   return (
@@ -405,7 +422,10 @@ const CategoryManagement = () => {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <ul className="divide-y divide-gray-200">
               {categories.map((category) => (
-                <li key={category.id} className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150">
+                <li
+                  key={category.id}
+                  className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150"
+                >
                   <div
                     className="flex justify-between items-center mb-3 cursor-pointer"
                     onClick={() => handleCategoryClick(category.id)}
@@ -601,11 +621,19 @@ const CategoryManagement = () => {
                                     <option value="" disabled>
                                       Chọn thuộc tính
                                     </option>
-                                    {attributes.map((attr) => (
-                                      <option key={attr.id} value={attr.id}>
-                                        {attr.name}
-                                      </option>
-                                    ))}
+                                    {attributes
+                                      .filter(
+                                        (attr) =>
+                                          !subcategory.attributes.some(
+                                            (existingAttr) =>
+                                              existingAttr.id === attr.id
+                                          )
+                                      )
+                                      .map((attr) => (
+                                        <option key={attr.id} value={attr.id}>
+                                          {attr.name}
+                                        </option>
+                                      ))}
                                   </select>
                                   <button
                                     onClick={(e) => handleSubmit(e, false)}
@@ -709,10 +737,7 @@ const CategoryManagement = () => {
 
       {/* Create Attribute Tab */}
       {activeTab === "createAttribute" && (
-        <AttributeTab
-          categories={categories}
-          setCategories={setCategories}
-        />
+        <AttributeTab categories={categories} setCategories={setCategories} />
       )}
     </div>
   );

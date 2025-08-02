@@ -71,7 +71,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t mt-10 pt-4 text-center text-sm text-gray-500">
-        © 2025 Ecommerce. Tất cả các quyền được bảo lưu.
+        © 2025 Shop mind. Tất cả các quyền được bảo lưu.
       </div>
     </footer>
   );

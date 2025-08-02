@@ -31,7 +31,6 @@ const FlashSale = () => {
   if (error) {
     return ;
   }
-  console.log(error);
 
   return (
     <section className="max-w-7xl mx-auto p-4">

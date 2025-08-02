@@ -1,4 +1,4 @@
-import api from "../config/interceptor-config";
+import { api } from "../config/interceptor-config";
 
 export async function requestEmailConfirmationCode(userId, email) {
   try {

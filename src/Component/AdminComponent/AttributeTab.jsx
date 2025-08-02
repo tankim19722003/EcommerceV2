@@ -11,7 +11,6 @@ const AttributeTab = () => {
 
   // Fetch attributes on component mount
   useEffect(() => {
-    console.log("AttributeTab useEffect called");
     const fetchAttributes = async () => {
       try {
         setIsFetching(true);

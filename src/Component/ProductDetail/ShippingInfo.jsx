@@ -2,6 +2,7 @@ import { useState } from "react";
 
 const ShippingInfo = ({ productShippingTypes }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  console.log("ShippingInfo component rendered with productShippingTypes:", productShippingTypes);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -39,13 +40,13 @@ const ShippingInfo = ({ productShippingTypes }) => {
                 {productShippingTypes.map((shipping) => (
                   <div key={shipping.id} className="mb-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-semibold">{shipping.name}</h3>
+                      <h3 className="font-semibold">{shipping.shippingType.name}</h3>
                       <p className="text-gray-500">
-                        {shipping.price.toLocaleString()}đ
+                        {shipping.shippingType.price.toLocaleString()}đ
                       </p>
                     </div>
                     <p className="text-gray-400 text-sm">
-                      {shipping.description}
+                      {shipping.shippingType.description}
                     </p>
                   </div>
                 ))}

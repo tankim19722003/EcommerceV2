@@ -16,97 +16,6 @@ export default function RegisterForm() {
   const accountRef = useRef();
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
-  // const handleRegister = async (e) => {
-  //   e.preventDefault();
-
-  //   // Call API to register
-  //   try {
-  //     const response = await fetch(
-  //       "http://localhost:8080/api/v1/user/register",
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({
-  //           account: data.account,
-  //           password: data.password,
-  //         }),
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       const result = await response.json();
-  //       throw new Error(result.message || "Đăng ký không thành công");
-  //     }
-
-  //     const result = await response.json();
-  //     console.log("Registration successful:", result);
-  //     Swal.fire({
-  //       icon: "success",
-  //       title: "Đăng ký thành công",
-  //       text: "Bạn có thể đăng nhập ngay bây giờ.",
-  //     });
-  //     setTimeout(() => {
-  //       window.location.href = "/login";
-  //     }, 2000);
-  //     // Redirect to login page or home page
-  //   } catch (error) {
-  //     console.error("Error during registration:", error);
-  //     Swal.fire({
-  //       icon: "error",
-  //       title: "Đăng ký thất bại",
-  //       text: error.message || "Vui lòng thử lại sau.",
-  //     });
-  //   }
-  //   // add data return to context
-  // };
-  // const fd = new FormData(e.target);
-  // const data = Object.fromEntries(fd.entries());
-  // console.log("Form data:", data);
-
-  // const phoneValid = isValidPhoneNumber(data.account, "VN");
-  // const emailValid = validator.isEmail(data.account);
-
-  // if (
-  //   data.passowrd === "" ||
-  //   data.account === "" ||
-  //   data.confirmPassword === ""
-  // ) {
-  //   Swal.fire({
-  //     icon: "error",
-  //     title: "Oops...",
-  //     text: "Vui lòng nhập email hoặc số điện thoại",
-  //   });
-  //   return;
-  // }
-
-  // if (!phoneValid && !emailValid) {
-  //   Swal.fire({
-  //     icon: "error",
-  //     title: "Oops...",
-  //     text: "Email hoặc số điện thoại không hợp lệ",
-  //   });
-  //   return;
-  // }
-
-  // if (data.password.length < 6) {
-  //   Swal.fire({
-  //     icon: "error",
-  //     title: "Oops...",
-  //     text: "Mật khẩu phải có ít nhất 6 ký tự",
-  //   });
-  //   return;
-  // }
-
-  // if (data.password !== data.confirmPassword) {
-  //   Swal.fire({
-  //     icon: "error",
-  //     title: "Oops...",
-  //     text: "Mật khẩu không khớp",
-  //   });
-  //   return;
-  // }
 
   const handRegisterUser = async () => {
     const password = passwordRef.current.value;
@@ -158,7 +67,6 @@ export default function RegisterForm() {
       `http://localhost:8080/api/v1/user/exists?account=${account}`
     );
 
-    console.log(response.ok);
     if (response.ok) {
       const isUserExisting = await response.json();
 
@@ -174,7 +82,6 @@ export default function RegisterForm() {
 
     // email need to validate
     if (emailValid) {
-      console.log("Go here");
       setIsFormShowing(true);
 
       // call api to send email

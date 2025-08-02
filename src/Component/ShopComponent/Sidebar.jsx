@@ -4,15 +4,31 @@ import { LogOut, Home, Package, ShoppingCart, BarChart2 } from "lucide-react";
 
 export default function Sidebar() {
   const handleLogout = () => {
-    console.log("User logged out");
     // Add actual logout logic here
   };
 
   const menuItems = [
-    { label: "Tổng quan", path: "/shop", exact: true, icon: <Home size={18} /> },
-    { label: "Quản lý sản phẩm", path: "/shop/product-management", icon: <Package size={18} /> },
-    { label: "Quản lý đơn hàng", path: "/shop/orders", icon: <ShoppingCart size={18} /> },
-    { label: "Quản lý doanh số", path: "/shop/sales", icon: <BarChart2 size={18} /> },
+    {
+      label: "Tổng quan",
+      path: "/shop",
+      exact: true,
+      icon: <Home size={18} />,
+    },
+    {
+      label: "Quản lý sản phẩm",
+      path: "/shop/product-management",
+      icon: <Package size={18} />,
+    },
+    {
+      label: "Quản lý đơn hàng",
+      path: "/shop/order",
+      icon: <ShoppingCart size={18} />,
+    },
+    {
+      label: "Quản lý doanh số",
+      path: "/shop/sales",
+      icon: <BarChart2 size={18} />,
+    },
   ];
 
   return (
@@ -50,9 +66,9 @@ export default function Sidebar() {
       <div className="p-5 border-t border-gray-200">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 text-white text-base font-medium rounded-md hover:bg-teal-600 transition-colors duration-200 shadow"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-500 text-white text-sm font-semibold rounded-full shadow-md hover:bg-teal-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50 transition-all duration-200 cursor-pointer"
         >
-          <LogOut size={20} />
+          <LogOut size={18} />
           Đăng xuất
         </button>
       </div>

@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { userAction } from "../../store/user-slice";
 import { Link, useNavigate } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
+import EcommerceSpinner from "../Share/EcommerceSpinner";
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
@@ -19,7 +20,6 @@ const LoginForm = () => {
     setUsernameError(!username);
     setPasswordError(!password);
     if (username && password) {
-      console.log("Form submitted:", { username, password });
     }
 
     try {
@@ -46,7 +46,6 @@ const LoginForm = () => {
       }
 
       const data = await response.json();
-      console.log("Login successful:", data);
 
       localStorage.setItem("user", JSON.stringify(data));
       dispatch(userAction.login(data.user));
@@ -57,25 +56,15 @@ const LoginForm = () => {
   };
 
   const loginWithFacebook = () => {
-    console.log("Logging in with Facebook...");
   };
 
   const loginWithGoogle = () => {
-    console.log("Logging in with Google...");
   };
 
-  if (isLoggingIn) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-20">
-        <div className="flex flex-col justify-center items-center">
-            <p>Đang đăng nhập vào tài khoản của bạn... Vui lòng đợi trong giây lát.</p>
-          <ClipLoader color="#36d7b7" size={50} />
-        </div>
-      </div>
-    );
-  }
 
   return (
+    <>
+    {isLoggingIn && <EcommerceSpinner text="Đang đăng nhập..."/>}
     <div className="flex justify-center items-center min-h-screen">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl border border-gray-200 sm:p-10">
         <h2 className="text-3xl font-extrabold text-center text-red-600 mb-8 tracking-tight">
@@ -176,6 +165,7 @@ const LoginForm = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
 

@@ -27,7 +27,6 @@ export default function ProductManagement() {
   ]);
 
   const handleEdit = (id) => {
-    console.log("Edit product with ID:", id);
   };
 
   const handleDelete = (id) => {
@@ -38,7 +37,6 @@ export default function ProductManagement() {
   };
 
   const handleCreate = () => {
-    console.log("Navigate to create product form");
   };
 
   return (

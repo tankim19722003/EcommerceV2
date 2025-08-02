@@ -1,31 +1,38 @@
 // src/api.js
 import axios from 'axios';
 
+// Axios instance có sẵn Content-Type: application/json
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api/v1', // your backend base URL
+  baseURL: 'http://localhost:8080/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add a request interceptor
-api.interceptors.request.use(
-  (config) => {
-    // Get the token from wherever you store it (localStorage, Redux, Context, etc.)
-    const jsonUser = localStorage.getItem('user');
-    const token = jsonUser ? JSON.parse(jsonUser).token : null;
+// Axios instance KHÔNG có Content-Type (dùng cho FormData)
+const apiNotHasTheHeader = axios.create({
+  baseURL: 'http://localhost:8080/api/v1',
+});
 
-    if (token) {
-      // Attach token to Authorization header
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+// Add interceptor cho cả 2
+const addAuthInterceptor = (instance) => {
+  instance.interceptors.request.use(
+    (config) => {
+      const jsonUser = localStorage.getItem('user');
+      const token = jsonUser ? JSON.parse(jsonUser).token : null;
 
-    return config;  // important to return config!
-  },
-  (error) => {
-    // Handle request error
-    return Promise.reject(error);
-  }
-);
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
 
-export default api;
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+};
+
+addAuthInterceptor(api);
+addAuthInterceptor(apiNotHasTheHeader);
+
+// Named exports
+export { api, apiNotHasTheHeader };

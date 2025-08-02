@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 const ShopRegistrationForm = () => {
   const user = useSelector((state) => state.user.user);
   const navigate  = useNavigate();
+
   const [formData, setFormData] = useState({
     shopName: "",
     description: "",
@@ -41,6 +42,7 @@ const ShopRegistrationForm = () => {
   const [isVerifySuccessfully, setIsVerifySuccessfully] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
   // check if shop is already registered
   useEffect(() => {
     if (!user) {
@@ -56,7 +58,7 @@ const ShopRegistrationForm = () => {
 
     for (const role of user.roles) {
       if (role === "shop") {
-        navigate("/shop-page");
+        navigate("/shop");
       }
     }
   }, [user]);

@@ -13,9 +13,7 @@ const Category = () => {
         try {
           const response = await fetch("http://localhost:8080/api/v1/sub_category");
           const data = await response.json();
-          console.log(data);
 
-          // console.log(data);
           setFetchedData(data);
         } catch (error) {
           console.error('Error fetching data:', error);
