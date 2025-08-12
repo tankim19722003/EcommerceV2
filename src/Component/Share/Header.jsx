@@ -35,8 +35,44 @@ function Header() {
         <div className="hidden sm:flex sm:flex-row justify-between items-center px-2 sm:px-3 md:px-4 w-full">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-white mb-2 sm:mb-0">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <Link to="/" className="text-sm sm:text-lg font-semibold hover:text-teal-200">
-                Shop mind
+              <Link
+                to="/"
+                className="text-sm sm:text-lg font-semibold hover:text-teal-200"
+              >
+              <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#4f46e5" stopOpacity="1" /> 
+      <stop offset="100%" stopColor="#06b6d4" stopOpacity="1" /> 
+    </linearGradient>
+  </defs>
+  <path
+    d="M20 55H80L70 25H30L20 55ZM50 15C55 15 60 20 60 25H40C40 20 45 15 50 15Z"
+    fill="url(#gradHeader)"
+    stroke="#FFF"
+    strokeWidth="4"
+  />
+  <path
+    d="M25 40C30 30 40 25 50 25C60 25 70 30 75 40"
+    fill="none"
+    stroke="#2dd4bf"
+    strokeWidth="5"
+    strokeLinecap="round"
+  />
+  <circle cx="35" cy="65" r="6" fill="#FFF" stroke="#4f46e5" strokeWidth="3" />
+  <circle cx="65" cy="65" r="6" fill="#FFF" stroke="#4f46e5" strokeWidth="3" />
+  <text
+    x="50%"
+    y="90"
+    textAnchor="middle"
+    fontFamily="Roboto, Arial, sans-serif"
+    fontSize="18"
+    fontWeight="700"
+    fill="#FFF"
+  >
+    Shop Mind
+  </text>
+</svg>
               </Link>
               <div className="h-4 sm:h-5 w-px bg-teal-200"></div>
               <Link
@@ -59,7 +95,11 @@ function Header() {
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-0">
               <Icon>
-                <img src={bell} alt="Bell icon" className="w-4 h-4 sm:w-5 sm:h-5" />
+                <img
+                  src={bell}
+                  alt="Bell icon"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                />
               </Icon>
             </div>
             {!user && (

@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import EcommerceSpinner from "../Share/EcommerceSpinner";
+import ProductListView from "../ProductList/ProductListView";
 
 const FlashSale = () => {
   const [isFetching, setIsFetching] = useState(false);
@@ -8,66 +11,67 @@ const FlashSale = () => {
   useEffect(() => {
     async function getFlashSaleProducts() {
       setIsFetching(true);
-      const response = await fetch(
-        "http://localhost:8080/api/v1/product/get_product_flash_sale?page=0&limit=10"
-      );
-      setIsFetching(false);
+      try {
+        const response = await fetch(
+          "http://localhost:8080/api/v1/product/get_product_flash_sale?page=0&limit=10"
+        );
+        const data = await response.json();
+        console.log("Flash Sale Products:", data); // Debug: Log fetched products
 
-      if (response.ok) {
-        const data = await response.json();
-        setProducts(data);
-      } else {
-        const data = await response.json();
-        setError(data.message);
+        if (response.ok) {
+          setProducts(data.product_list_responses || []);
+        } else {
+          setError(data.message || "Failed to fetch flash sale products.");
+        }
+      } catch (error) {
+        setError("Network error. Please try again later.");
+      } finally {
+        setIsFetching(false);
       }
     }
 
     getFlashSaleProducts();
   }, []);
 
-  if (isFetching && !error) {
-    return <p className="text-center text-red-500">Loading...</p>;
+  if (isFetching) {
+    return <EcommerceSpinner text="Đang tải sản phẩm flash sale..." />;
   }
+
   if (error) {
-    return ;
+    return (
+      <section className="max-w-7xl mx-auto p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-bold text-red-500 mb-2">⚡ FLASH SALE</h2>
+          <p className="text-red-500 text-sm">{error}</p>
+          <button
+            onClick={() => {
+              setError("");
+              getFlashSaleProducts();
+            }}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+          >
+            Thử lại
+          </button>
+        </div>
+      </section>
+    );
   }
 
   return (
-    <section className="max-w-7xl mx-auto p-4">
-      <div className="flex justify-between items-center bg-white p-4 rounded-t-lg shadow-md">
-        <h2 className="text-2xl font-bold text-red-500">⚡ FLASH SALE</h2>
-        <a href="#" className="text-red-500 font-bold text-lg hover:underline">
-          Xem tất cả →
-        </a>
-      </div>
-      <div className="grid grid-cols-6 gap-4 bg-white p-4 rounded-b-lg shadow-md">
-        {products.map((product) => (
-          <div
-            key={product.product_id}
-            className="relative p-2 bg-white rounded-lg hover:scale-105 transition-transform duration-200"
+    <section className="max-w-7xl mx-auto p-4 sm:p-6">
+      <div className="bg-white p-4 sm:p-6 rounded-t-lg shadow-md">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-red-500">
+            ⚡ FLASH SALE
+          </h2>
+          <Link
+            to="/flash-sale"
+            className="text-red-500 font-semibold text-sm sm:text-base hover:underline mt-2 sm:mt-0"
           >
-            <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-              Shop
-            </div>
-            <img
-              src={product.product_image}
-              alt={product.product_name}
-              className="w-full h-36 object-contain rounded"
-            />
-            <div className="absolute top-2 right-2 bg-yellow-400 text-gray-800 text-xs px-2 py-1 rounded">
-              {product.discount_percent}%
-            </div>
-            <h3 className="text-sm font-medium text-gray-800 mt-2">
-              {product.product_name}
-            </h3>
-            <p className="text-red-500 font-bold mt-1">{product.price}</p>
-            <p
-              className={`text-xs mt-1 bg-orange-100 text-orange-500 px-2 py-1 rounded`}
-            >
-              Đang bán chạy
-            </p>
-          </div>
-        ))}
+            Xem tất cả →
+          </Link>
+        </div>
+        <ProductListView products={products} />
       </div>
     </section>
   );

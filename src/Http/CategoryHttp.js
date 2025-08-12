@@ -3,7 +3,11 @@ import { api } from "../config/interceptor-config";
 
 export async function createCategory(categoryData) {
   try {
-    const response = await api.post("/category/create", categoryData)
+    const response = await api.post("/category/create", categoryData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     return response.data;
   } catch (error) {
@@ -14,7 +18,9 @@ export async function createCategory(categoryData) {
 
 export async function getCategories() {
   try {
-    const response = await axios.get("http://localhost:8080/api/v1/category/get_all_categories");
+    const response = await axios.get(
+      "http://localhost:8080/api/v1/category/get_all_categories"
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -22,10 +28,12 @@ export async function getCategories() {
   }
 }
 
-//  http for subcategory 
+//  http for subcategory
 export async function getSubcategoryByCategoryId(categoryId) {
   try {
-    const response = await axios.get(`http://localhost:8080/api/v1/sub_category/${categoryId}`);
+    const response = await axios.get(
+      `http://localhost:8080/api/v1/sub_category/${categoryId}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching subcategories:", error);
@@ -35,7 +43,10 @@ export async function getSubcategoryByCategoryId(categoryId) {
 
 export async function createSubcategory(subcategoryData) {
   try {
-    const response = await api.post("http://localhost:8080/api/v1/sub_category", subcategoryData);
+    const response = await api.post(
+      "http://localhost:8080/api/v1/sub_category",
+      subcategoryData
+    );
     return response.data;
   } catch (error) {
     console.error("Error creating subcategory:", error);

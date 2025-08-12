@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LogOut, Home, Package, ShoppingCart, BarChart2 } from "lucide-react";
+import { LogOut, Home, Package, ShoppingCart, BarChart2, TicketPercent, Tag } from "lucide-react";
 
 export default function Sidebar() {
   const handleLogout = () => {
@@ -28,6 +28,16 @@ export default function Sidebar() {
       label: "Quản lý doanh số",
       path: "/shop/sales",
       icon: <BarChart2 size={18} />,
+    },
+    {
+      label: "Quản lý voucher",
+      path: "/shop/voucher-management",
+      icon: <TicketPercent size={18} />,
+    },
+    {
+      label: "Quản lý giảm giá",
+      path: "/shop/product-discount-management",
+      icon: <Tag size={18} />,
     },
   ];
 

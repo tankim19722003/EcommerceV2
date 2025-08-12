@@ -1,8 +1,8 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { FaRobot } from "react-icons/fa6";
 import { FiMic, FiSend, FiX } from "react-icons/fi";
 import assistantIcon from "../../assets/assistant.png";
+import { api } from "../../config/interceptor-config";
 
 function Assistant({ showAssistant }) {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -18,10 +18,33 @@ function Assistant({ showAssistant }) {
   const recognitionRef = useRef(null);
   const bottomRef = useRef(null);
 
-  const toggleVoiceMode = () => {
-    setIsVoiceMode(!isVoiceMode);
-    setIsDialogOpen(!isVoiceMode);
+  // Fetch all chats from backend and update messages state
+  const fetchAllChats = async () => {
+    try {
+      const response = await api.get(
+        "http://localhost:8080/api/v1/user_chat/get_all"
+      );
+      const chats = response.data;
+
+      // Convert backend chat data into the format needed for UI display
+      // We alternate user and bot messages by order of created_at
+      const newMessages = [];
+      chats.forEach((chat) => {
+        newMessages.push({ sender: "user", text: chat.user_message, id: chat.id + "_user" });
+        newMessages.push({ sender: "bot", text: chat.chat_box_message, id: chat.id + "_bot" });
+      });
+
+      setMessages(newMessages.length ? newMessages : [
+        { sender: "bot", text: "Xin chào tôi có thể giúp gì được cho bạn?" }
+      ]);
+    } catch (error) {
+      console.error("Failed to fetch chat messages:", error);
+    }
   };
+
+  useEffect(() => {
+    fetchAllChats();
+  }, []);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -44,11 +67,12 @@ function Assistant({ showAssistant }) {
       if (transcript.trim() !== "") {
         setMessages((prev) => [...prev, { sender: "user", text: transcript }]);
         const answerResponse = await callGemini(transcript);
-        setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: answerResponse },
-        ]);
+
+        setMessages((prev) => [...prev, { sender: "bot", text: answerResponse }]);
         speakText(answerResponse);
+
+        // Save chat messages to backend
+        await saveChatToBackend(transcript, answerResponse);
       }
     };
 
@@ -65,16 +89,35 @@ function Assistant({ showAssistant }) {
     recognitionRef.current = recognition;
   }, []);
 
-  // ✅ Auto-scroll to bottom when messages change
+  // Scroll chat to bottom when messages update
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const toggleVoiceMode = () => {
+    setIsVoiceMode(!isVoiceMode);
+    setIsDialogOpen(!isVoiceMode);
+  };
 
   const startListening = () => {
     if (recognitionRef.current) {
       recognitionRef.current.start();
     }
     setIsListening(true);
+  };
+
+  // Save user and bot messages to backend
+  const saveChatToBackend = async (userMessage, botMessage) => {
+    try {
+      await api.post("http://localhost:8080/api/v1/user_chat", {
+        user_message: userMessage,
+        chat_box_message: botMessage,
+      });
+      // Refresh chat list from backend after save
+      await fetchAllChats();
+    } catch (error) {
+      console.error("Failed to save chat message:", error);
+    }
   };
 
   async function callGemini(promptText) {
@@ -102,10 +145,10 @@ ${promptText}`;
       );
 
       const result = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      return result || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
+      return result || "Xin lỗi tôi không hiểu câu hỏi của bạn";
     } catch (error) {
       alert("Gemini API error: " + (error.response?.data || error.message));
-      return "Có lỗi xảy ra khi gọi API.";
+      return "Có lỗi xảy ra khi gọi API";
     } finally {
       setIsAiThinking(false);
     }
@@ -114,7 +157,7 @@ ${promptText}`;
   function speakText(text) {
     const voiceName = "Vietnamese Female";
     const isVoiceAvailable = window.responsiveVoice
-      .getVoices()
+      ?.getVoices()
       .some((v) => v.name === voiceName);
 
     if (isVoiceAvailable) {
@@ -133,7 +176,11 @@ ${promptText}`;
 
     const responseText = await callGemini(userMessage);
     setMessages((prev) => [...prev, { sender: "bot", text: responseText }]);
-    // speakText(responseText);
+
+    // Save to backend
+    await saveChatToBackend(userMessage, responseText);
+
+    // speakText(responseText); // optional to enable voice readout
   };
 
   const handleKeyPress = (e) => {
@@ -164,7 +211,7 @@ ${promptText}`;
               <div className="flex-1 p-3 overflow-y-auto text-sm space-y-2">
                 {messages.map((msg, index) => (
                   <div
-                    key={index}
+                    key={msg.id || index}
                     className={`flex ${
                       msg.sender === "user" ? "justify-end" : "justify-start"
                     }`}
@@ -180,7 +227,7 @@ ${promptText}`;
                     </div>
                   </div>
                 ))}
-                <div ref={bottomRef} /> {/* ✅ Auto-scroll target */}
+                <div ref={bottomRef} /> {/* Auto-scroll target */}
               </div>
               <div className="p-2 border-t border-gray-200 flex flex-row items-center gap-2">
                 <input

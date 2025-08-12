@@ -19,8 +19,6 @@ const LoginForm = () => {
     e.preventDefault();
     setUsernameError(!username);
     setPasswordError(!password);
-    if (username && password) {
-    }
 
     try {
       setIsLoggingIn(true);
@@ -133,7 +131,7 @@ const LoginForm = () => {
               <span className="px-2 bg-white text-gray-500">HOẶC</span>
             </div>
           </div>
-          <div className="mt-4 flex flex-col gap-3">
+          {/* <div className="mt-4 flex flex-col gap-3">
             <button
               onClick={loginWithFacebook}
               className="flex items-center justify-center gap-2 bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 shadow-md hover:shadow-lg"
@@ -152,10 +150,10 @@ const LoginForm = () => {
               </svg>
               Google
             </button>
-          </div>
+          </div> */}
         </div>
         <p className="text-sm mt-6 text-center text-gray-600">
-          Bạn mới biết Shopee?{" "}
+          Bạn mới biết Shop Mind?{" "}
           <Link
             to="/register"
             className="text-red-600 hover:text-red-800 hover:underline transition duration-200"

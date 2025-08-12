@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ClipLoader } from "react-spinners";
 import { api } from "../../config/interceptor-config";
+import Swal from "sweetalert2";
 
 const OrderList = () => {
   const [activeTab, setActiveTab] = useState("Tất cả");
@@ -29,12 +30,10 @@ const OrderList = () => {
       setError(null);
       try {
         const status = statusMap[activeTab];
-        let url = `http://localhost:8080/api/v1/order/get_order_by_status?`;
-        url += `status=${status}`;
+        let url = `http://localhost:8080/api/v1/order/get_order_by_status?status=${status}`;
 
         const response = await api.get(url);
-        setOrders(response.data);
-        console.log(response.data)
+        setOrders(response.data || []);
       } catch (err) {
         setError(err.response?.data || "Failed to fetch orders");
         console.error("API Error:", err);
@@ -47,8 +46,6 @@ const OrderList = () => {
   }, [activeTab]);
 
   const handleRatingSubmit = async () => {
-    console.log("Selected id:")
-    console.log(selectedOrderDetailId);
     try {
       await api.post("http://localhost:8080/api/v1/feedback/create_feedback", {
         order_detail_id: selectedOrderDetailId,
@@ -60,13 +57,40 @@ const OrderList = () => {
       setFeedback("");
       setSelectedOrderId(null);
       setSelectedOrderDetailId(null);
-      // Optionally show success message or refresh orders
       alert("Đánh giá đã được gửi thành công!");
     } catch (err) {
       console.error("Failed to submit feedback:", err);
       alert("Gửi đánh giá thất bại. Vui lòng thử lại!");
     }
   };
+
+  const handleCancelOrder = async (orderId) => {
+  try {
+    await api.post(
+      `http://localhost:8080/api/v1/order/cancel_order?orderId=${orderId}`
+    );
+
+ // Remove the canceled order from local state
+ 
+    setOrders((prevOrders) => prevOrders.filter(order => order.order_id !== orderId));
+
+    Swal.fire({
+      icon: "success",
+      title: "Thành công",
+      text: "Hủy đơn hàng thành công!",
+      timer: 2000,
+      showConfirmButton: false
+    });
+  } catch (err) {
+    console.error("Failed to cancel order:", err);
+    Swal.fire({
+      icon: "error",
+      title: "Thất bại",
+      text: "Hủy đơn hàng thất bại. Vui lòng thử lại!",
+      confirmButtonText: "OK"
+    });
+  }
+};
 
   if (error) {
     return (
@@ -85,7 +109,7 @@ const OrderList = () => {
             key={tab}
             className={`pb-3 px-4 text-sm font-semibold capitalize ${
               activeTab === tab
-                ? "border-b-2 border-cyan-500 text-cyan-600"
+                ? "border-b-2 border-teal-500 text-teal-600"
                 : "text-gray-600 hover:text-gray-800"
             } transition-colors duration-200`}
             onClick={() => setActiveTab(tab)}
@@ -100,7 +124,7 @@ const OrderList = () => {
         <div className="relative">
           <input
             type="text"
-            className="w-full p-3 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 shadow-sm transition duration-200 ease-in-out text-base"
+            className="w-full p-3 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 shadow-sm transition duration-200 ease-in-out text-base"
             placeholder="Bạn có thể tìm theo tên Shop, ID đơn hàng hoặc Tên Sản phẩm"
             aria-label="Tìm kiếm đơn hàng"
           />
@@ -144,7 +168,7 @@ const OrderList = () => {
                   <div className="flex flex-row items-center space-x-4">
                     <Link
                       to={`/shop/${order.shop_name}`}
-                      className="text-cyan-600 font-medium hover:text-cyan-700 hover:underline transition-colors text-sm sm:text-base"
+                      className="text-teal-600 font-medium hover:text-teal-700 hover:underline transition-colors text-sm sm:text-base"
                     >
                       {order.shop_name}
                     </Link>
@@ -152,9 +176,11 @@ const OrderList = () => {
                       Xem Shop
                     </button>
                   </div>
-                  <span className="text-sm font-medium text-gray-600">
-                    {activeTab || "Hoàn thành"}
-                  </span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm font-medium text-gray-600">
+                      {activeTab}
+                    </span>
+                  </div>
                 </div>
 
                 {order.order_detail_responses.map((orderDetail, index) => (
@@ -220,22 +246,30 @@ const OrderList = () => {
                           }
                         )}
                       </p>
-
-                      {activeTab === "Hoàn thành" && !orderDetail.has_commented && (
-                        <div className="col-span-1 flex justify-end">
+                      {activeTab === "Đang chờ xác nhận" && (
+                        <div className=" col-span-1 flex justify-end">
                           <button
-                            className="px-3 sm:px-4 py-1 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-xs sm:text-sm font-medium"
-                            onClick={() => {
-                              setSelectedOrderDetailId(
-                                orderDetail.id
-                              );
-                              setShowModal(true);
-                            }}
+                            className="cursor-pointer px-3 sm:px-4 py-1 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-xs sm:text-sm font-medium"
+                            onClick={() => handleCancelOrder(order.order_id)}
                           >
-                            Đánh giá
+                            Hủy
                           </button>
                         </div>
                       )}
+                      {activeTab === "Hoàn thành" &&
+                        !orderDetail.has_commented && (
+                          <div className="col-span-1 flex justify-end">
+                            <button
+                              className="px-3 sm:px-4 py-1 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 text-xs sm:text-sm font-medium"
+                              onClick={() => {
+                                setSelectedOrderDetailId(orderDetail.id);
+                                setShowModal(true);
+                              }}
+                            >
+                              Đánh giá
+                            </button>
+                          </div>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -248,8 +282,10 @@ const OrderList = () => {
       {/* Rating Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="border border-gray-300 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Đánh giá đơn hàng</h2>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Đánh giá đơn hàng
+            </h2>
 
             {/* Star Rating */}
             <div className="flex justify-center mb-4">
@@ -268,7 +304,7 @@ const OrderList = () => {
 
             {/* Feedback Textarea */}
             <textarea
-              className="w-full p-3 border border-gray-200 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="w-full p-3 border border-gray-200 rounded-lg mb-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition duration-200"
               rows="4"
               placeholder="Nhập nhận xét của bạn..."
               value={feedback}
@@ -278,7 +314,7 @@ const OrderList = () => {
             {/* Modal Actions */}
             <div className="flex justify-end space-x-3">
               <button
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-100 transition-all duration-150 text-sm font-medium"
                 onClick={() => {
                   setShowModal(false);
                   setRating(0);
@@ -290,9 +326,9 @@ const OrderList = () => {
                 Hủy
               </button>
               <button
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all duration-150 text-sm font-medium"
                 onClick={handleRatingSubmit}
-                // disabled={rating === 0 || !selectedOrderDetailId}
+                disabled={rating === 0 || !selectedOrderDetailId}
               >
                 Gửi đánh giá
               </button>

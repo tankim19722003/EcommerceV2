@@ -1,40 +1,51 @@
-import { Link, useLocation } from "react-router-dom"; // Add useLocation
+import { Link, useLocation, useParams } from "react-router-dom";
 import Pagination from "../ProductDetail/Pagination";
 import { useEffect, useState } from "react";
 import { getProductsByPage } from "../../Http/ProductHttp";
 import { ClipLoader } from "react-spinners";
-import axios from "axios"; // Import axios for API calls
 import { api } from "../../config/interceptor-config";
+import ProductListView from "./ProductListView";
 
 let firstTimeVisiting = true;
 
-const ProductList = () => {
-  const [products, setProducts] = useState(null);
+const ProductList = ({ productItems, totalPage }) => {
+  const [displayProducts, setDisplayProducts] = useState(productItems || null);
   const [page, setPage] = useState(0);
+  const [sortOrder, setSortOrder] = useState("default");
   const [isFetching, setIsFetching] = useState(false);
-  const itemsPerPage = 10; // Number of items per page
-  const location = useLocation(); // Get location for accessing navigation state
-  const keyword = location.state?.keyword || ""; // Get keyword from navigation state
+  const itemsPerPage = 48;
+  const location = useLocation();
+  const keyword = location.state?.keyword || "";
+  const { id: categoryId } = useParams();
 
-  // Fetch products based on keyword or default
+  // Fetch products
   useEffect(() => {
     async function fetchProducts() {
       setIsFetching(true);
       try {
-        let productData;
-        if (keyword) {
-          // Fetch products by keyword
+        let productData = displayProducts || [];
+        if (categoryId) {
+          const response = await api.get(
+            `http://localhost:8080/api/v1/product/get_product_by_category/${categoryId}?page=${page}&limit=${itemsPerPage}`
+          );
+          productData = response.data.product_list_responses;
+        } else if (keyword) {
           const response = await api.get(
             `http://localhost:8080/api/v1/product/get_all_product_by_key_word?keyword=${encodeURIComponent(
               keyword
             )}&page=${page}&limit=${itemsPerPage}`
           );
-          productData = response.data;
+          productData = response.data.product_list_responses;
         } else {
-          // Fetch default products
-          productData = await getProductsByPage(page, itemsPerPage);
+          let productDataResponse;
+          if (!displayProducts) {
+            productDataResponse = await getProductsByPage(page, itemsPerPage);
+            productData = productDataResponse.product_list_responses;
+            console.log("Initial fetch, setting displayProducts:", productData);
+          } 
         }
-        setProducts(productData);
+
+        setDisplayProducts(productData);
         setIsFetching(false);
         firstTimeVisiting = false;
       } catch (error) {
@@ -45,13 +56,37 @@ const ProductList = () => {
     }
 
     fetchProducts();
-  }, [page, keyword]); // Add keyword to dependency array
+  }, [page, keyword]);
+
+  // Handle sort change
+  const handleSortChange = (event) => {
+    const newSortOrder = event.target.value;
+    setDisplayProducts(() =>
+      sortProductsByPrice(displayProducts, newSortOrder)
+    );
+    setPage(0); // Reset to first page
+  };
+
+  function sortProductsByPrice(products, sortType) {
+    if (!Array.isArray(products)) return [];
+
+    const sorted = [...products].sort((a, b) => {
+      if (sortType === "increment") {
+        return a.price - b.price;
+      } else if (sortType === "decrement") {
+        return b.price - a.price;
+      }
+      return 0; // default: no sorting
+    });
+
+    return sorted;
+  }
 
   if (isFetching || firstTimeVisiting) {
     return <ClipLoader color="#36d7b7" size={50} />;
   }
 
-  if (!isFetching && !products) {
+  if (!isFetching && !displayProducts) {
     return (
       <div className="text-center text-gray-500">
         Không có sản phẩm nào được tìm thấy.
@@ -60,55 +95,31 @@ const ProductList = () => {
   }
 
   return (
-    <>
-      <div className="my-2">
-        {keyword && (
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Kết quả tìm kiếm cho từ khóa:{" "}
-            <span className="text-teal-600">"{keyword}"</span>
-          </h2>
-        )}
-        <div className="flex flex-wrap gap-4">
-          {products.product_list_responses.map((product, index) => (
-            <Link
-              to={`/product/${product.id}`}
-              key={index}
-              className="flex-none w-48 p-2 border border-gray-200 rounded-lg bg-white shadow-md hover:shadow-lg transition"
+    <div className="my-2 py-8">
+      {(keyword || categoryId) && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 px-4 sm:px-6 lg:px-8">
+          <div className="mt-3 sm:mt-0 sm:ml-auto">
+            <select
+              value={sortOrder}
+              onChange={handleSortChange}
+              className="block w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2 text-sm sm:text-base bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm"
+              aria-label="Sắp xếp sản phẩm theo giá"
             >
-              <img
-                src={product.thumbnail?.avatar_url}
-                alt={product.name}
-                className="w-full h-40 object-cover rounded-t-lg"
-              />
-              <div className="p-2">
-                <p className="text-sm text-gray-700 line-clamp-2">
-                  {product.name}
-                </p>
-                <p className="text-lg font-semibold text-red-600">
-                  đ{product.price.toLocaleString()}
-                </p>
-                {product.discount && (
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                    {product.discount}
-                  </span>
-                )}
-                {product.voucher && (
-                  <span className="text-xs bg-yellow-400 text-white px-2 py-1 rounded ml-2">
-                    Voucher
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
+              <option value="default">Sắp xếp: Giá</option>
+              <option value="increment">Giá: Thấp đến Cao</option>
+              <option value="decrement">Giá: Cao đến Thấp</option>
+            </select>
+          </div>
         </div>
+      )}
 
-        <Pagination
-          totalPage={products.total_page}
-          onPageChange={setPage}
-          page={page}
-        />
-      </div>
-    </>
+      <ProductListView products={displayProducts} />
+      <Pagination
+        totalPage={displayProducts.total_page}
+        onPageChange={setPage}
+        page={page}
+      />
+    </div>
   );
 };
 

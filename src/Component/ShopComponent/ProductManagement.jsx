@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Package, Eye, X } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Eye, X, PlusCircle } from "lucide-react";
 import { api } from "../../config/interceptor-config";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -10,6 +10,7 @@ export default function ProductManagement() {
   const [error, setError] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // Fetch products from API when component mounts
@@ -26,12 +27,10 @@ export default function ProductManagement() {
 
         // Map API response to the format expected by the table
         const mappedProducts = response.data.map((item) => {
-          // Determine price, quantity, and category details
           let price = 0;
           let quantity = 0;
           let categoryDetails = {};
 
-          // Check for product_category_one_level_responses
           if (
             item.product_category_responses
               ?.product_category_one_level_responses?.[0]
@@ -47,9 +46,7 @@ export default function ProductManagement() {
                 item.product_category_responses
                   .product_category_one_level_responses[0],
             };
-          }
-          // Check for product_category_two_level
-          else if (
+          } else if (
             item.product_category_responses?.product_category_two_level?.[0]
               ?.child_product_category_responses?.[0]
           ) {
@@ -103,22 +100,49 @@ export default function ProductManagement() {
   }, []);
 
   const handleEdit = (id) => {
-    // Navigate to ProductCreationForm with productId as query parameter
-    navigate(`/shop/product-creation?productId=${id}`);
+    setSelectedProduct(products.find((p) => p.id === id));
+    setEditModalOpen(true);
+  };
+
+  const handleSectionEdit = (section) => {
+    const productId = selectedProduct.id;
+    switch (section) {
+      case "basicInfo":
+        navigate(
+          `/shop/product-creation?productId=${productId}&section=basicInfo`
+        );
+        break;
+      case "categories":
+        navigate(
+          `/shop/product-creation?productId=${productId}&section=categories`
+        );
+        break;
+      case "attributes":
+        navigate(
+          `/shop/product/attribute-updating?productId=${productId}&section=attributes`
+        );
+        break;
+      case "shipping":
+        navigate(
+          `/shop/product/product-shipping-updating?productId=${productId}&section=shipping`
+        );
+        break;
+      default:
+        break;
+    }
+    setEditModalOpen(false);
   };
 
   const handleDelete = async (id) => {
-    // Store the current products state for potential rollback
     const previousProducts = [...products];
 
-    // Show SweetAlert confirmation
     const result = await Swal.fire({
       title: "Xác nhận xóa sản phẩm",
       text: "Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#0d9488", // Matches bg-teal-600
-      cancelButtonColor: "#ef4444", // Matches red for delete
+      confirmButtonColor: "#0d9488",
+      cancelButtonColor: "#ef4444",
       confirmButtonText: "Xóa",
       cancelButtonText: "Hủy",
       reverseButtons: true,
@@ -133,18 +157,13 @@ export default function ProductManagement() {
 
     if (result.isConfirmed) {
       try {
-        // Make DELETE request to API
         await api.delete(`http://localhost:8080/api/v1/product/${id}`);
-
-        // Update products state by filtering out the deleted product
         setProducts(products.filter((p) => p.id !== id));
-
-        // Show success message
         await Swal.fire({
           title: "Xóa thành công",
           text: "Sản phẩm đã được xóa.",
           icon: "success",
-          confirmButtonColor: "#0d9488", // Matches bg-teal-600
+          confirmButtonColor: "#0d9488",
           confirmButtonText: "OK",
           customClass: {
             popup: "rounded-xl shadow-lg",
@@ -154,18 +173,15 @@ export default function ProductManagement() {
           },
         });
       } catch (err) {
-        // Revert to previous products state on failure
         console.log(err);
         setProducts(previousProducts);
-
-        // Show error message
         await Swal.fire({
           title: "Xóa thất bại",
           text:
             err.response?.data?.message ||
             "Không thể xóa sản phẩm này vì nó đã được sử dụng trong một hoặc nhiều đơn hàng.",
           icon: "error",
-          confirmButtonColor: "#0d9488", // Matches bg-teal-600
+          confirmButtonColor: "#0d9488",
           confirmButtonText: "OK",
           customClass: {
             popup: "rounded-xl shadow-lg",
@@ -192,18 +208,25 @@ export default function ProductManagement() {
     setSelectedProduct(null);
   };
 
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedProduct(null);
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold flex items-center gap-2">
           <Package size={24} /> Quản lý sản phẩm
         </h2>
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 flex items-center gap-2 transition-all duration-200 ease-in-out cursor-pointer"
-        >
-          <Plus size={18} /> Thêm sản phẩm
-        </button>
+        <div className="flex gap-3.5">
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 flex items-center gap-2 transition-all duration-200 ease-in-out shadow-sm hover:shadow-md cursor-pointer"
+          >
+            <Plus size={18} /> Thêm sản phẩm
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto bg-white shadow rounded-lg">
@@ -219,8 +242,13 @@ export default function ProductManagement() {
           <tbody className="divide-y divide-gray-100">
             {loading ? (
               <tr>
-                <td colSpan="4" className="px-4 py-6 text-center text-gray-500">
-                  Đang tải dữ liệu...
+                <td colSpan="100%" className="py-10 text-center">
+                  <div className="inline-flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                    <span className="ml-2 text-gray-600">
+                      Đang tải dữ liệu...
+                    </span>
+                  </div>
                 </td>
               </tr>
             ) : error ? (
@@ -281,7 +309,7 @@ export default function ProductManagement() {
       </div>
 
       {isModalOpen && selectedProduct && (
-        <div className="fixed inset-0 -black bg-opacity-60 backdrop-blur-md flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-opacity-60 backdrop-blur-md flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl relative border border-gray-200">
             <button
               onClick={closeModal}
@@ -485,6 +513,48 @@ export default function ProductManagement() {
                 className="px-5 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-all duration-200 ease-in-out cursor-pointer shadow-md"
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editModalOpen && selectedProduct && (
+        <div className="fixed inset-0 bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-xl border border-gray-200 transform transition-all duration-300 ease-in-out scale-100 hover:shadow-2xl">
+            <button
+              onClick={closeEditModal}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors duration-200 ease-in-out rounded-full p-1 hover:bg-gray-100 cursor-pointer hover:scale-110"
+            >
+              <X size={24} />
+            </button>
+            <h3 className="text-xl font-bold text-gray-900 mb-6 border-b-2 border-teal-500 pb-3">
+              Chọn phần để chỉnh sửa
+            </h3>
+            <div className="space-y-3">
+              <button
+                onClick={() => handleSectionEdit("basicInfo")}
+                className="w-full px-5 py-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 font-medium rounded-lg shadow-md hover:from-blue-100 hover:to-blue-200 transition-all duration-200 ease-in-out hover:shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
+              >
+                <Edit size={18} /> Chỉnh sửa thông tin cơ bản
+              </button>
+              <button
+                onClick={() => handleSectionEdit("categories")}
+                className="w-full px-5 py-3 bg-gradient-to-r from-green-50 to-green-100 text-green-800 font-medium rounded-lg shadow-md hover:from-green-100 hover:to-green-200 transition-all duration-200 ease-in-out hover:shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
+              >
+                <Package size={18} /> Chỉnh sửa danh mục
+              </button>
+              <button
+                onClick={() => handleSectionEdit("attributes")}
+                className="w-full px-5 py-3 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 font-medium rounded-lg shadow-md hover:from-purple-100 hover:to-purple-200 transition-all duration-200 ease-in-out hover:shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
+              >
+                <Eye size={18} /> Chỉnh sửa thuộc tính
+              </button>
+              <button
+                onClick={() => handleSectionEdit("shipping")}
+                className="w-full px-5 py-3 bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 font-medium rounded-lg shadow-md hover:from-teal-100 hover:to-teal-200 transition-all duration-200 ease-in-out hover:shadow-lg text-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-105"
+              >
+                <Package size={18} /> Chỉnh sửa thông tin ship
               </button>
             </div>
           </div>

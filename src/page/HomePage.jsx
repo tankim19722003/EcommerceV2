@@ -1,7 +1,7 @@
 import Banner from "../Component/Share/Banner";
 import Category from "../Component/Category/Category";
-import ProductList from "../Component/ProductList/ProductList";
 import FlashSale from "../Component/FlashSale/FlashSale";
+import ProductList from "../Component/ProductList/ProductList";
 
 function HomePage() {
   return (

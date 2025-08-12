@@ -1,7 +1,8 @@
-function CategoryItem({ name, img }) {
+function CategoryItem({ name, img, onViewCategoryProduct }) {
   return (
     <div
-        className="flex-none w-40 text-center p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+        className="cursor-pointer flex-none w-40 text-center p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+        onClick={() => onViewCategoryProduct(name)}
     >
         <img
             src={img}

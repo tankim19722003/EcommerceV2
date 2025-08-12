@@ -136,6 +136,7 @@ const findParentCategoryById = (childId) => {
               rating={product.product_basic_info.rating}
               reviews={product.reviews}
               price={price}
+              discount={product.product_basic_info.discount_percent}
             />
             <ShippingInfo
               productShippingTypes={product.product_shipping_type_responses}

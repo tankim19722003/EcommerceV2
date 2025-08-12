@@ -61,13 +61,16 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         ))}
       </nav>
 
-      <button
-        onClick={handleLogout}
-        className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 text-sm font-semibold shadow-md flex items-center gap-2"
-      >
-        <LogOut size={18} />
-        Đăng xuất
-      </button>
+      {/* Logout */}
+      <div className="p-5 border-t border-gray-200">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-500 text-white text-sm font-semibold rounded-full shadow-md hover:bg-teal-600 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50 transition-all duration-200 cursor-pointer"
+        >
+          <LogOut size={18} />
+          Đăng xuất
+        </button>
+      </div>
     </aside>
   );
 };

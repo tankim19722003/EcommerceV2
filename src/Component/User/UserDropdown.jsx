@@ -63,10 +63,9 @@ export default function UserDropdown({ user }) {
         <ul className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-visible animate-fade-in-down">
           <li
             className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors duration-150"
-            onClick={() => alert("Change info clicked!")}
           >
             <FaRegCircleUser size={16} />
-            <span>Thay đổi thông tin</span>
+            <Link to="/user-info">Thay đổi thông tin</Link>
           </li>
 
           <li className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors duration-150">

@@ -12,8 +12,6 @@ import EcommerceSpinner from "../Share/EcommerceSpinner";
 import { useLocation } from "react-router-dom";
 
 const ProductCreationForm = () => {
-  const location = useLocation();
-  const [productId, setProductId] = useState(null);
   const [basicInfo, setBasicInfo] = useState({
     name: "",
     description: "",
@@ -25,14 +23,12 @@ const ProductCreationForm = () => {
   });
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
-  const [thumbnail, setThumbnail] = useState(null);
-  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState(null);
-  const [productImages, setProductImages] = useState([]);
-  const [existingProductImages, setExistingProductImages] = useState([]);
+  const [thumbnail, setThumbnail] = useState(null); // Holds the File object
+  const [productImages, setProductImages] = useState([]); // Holds File objects
   const [categoryType, setCategoryType] = useState("one-level");
   const [oneLevelCategoryGroup, setOneLevelCategoryGroup] = useState("");
   const [oneLevelCategories, setOneLevelCategories] = useState([
-    { value: "", quantity: "", price: "", image: null },
+    { value: "", quantity: "", price: "", image: null, imageUrl: null },
   ]);
   const [twoLevelCategoryGroup, setTwoLevelCategoryGroup] = useState("");
   const [twoLevelSubCategoryGroup, setTwoLevelSubCategoryGroup] = useState("");
@@ -40,6 +36,7 @@ const ProductCreationForm = () => {
     {
       parent_product_category: "",
       image: null,
+      imageUrl: null,
       child_product_categories: [{ name: "", quantity: "", price: "" }],
     },
   ]);
@@ -65,172 +62,6 @@ const ProductCreationForm = () => {
   });
   const [isCreating, setIsCreating] = useState(false);
 
-  // Extract productId from URL query params
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const id = queryParams.get("productId");
-    setProductId(id);
-  }, [location.search]);
-
-  // Fetch product details if productId exists
-  useEffect(() => {
-    if (productId) {
-      const fetchProductDetails = async () => {
-        try {
-          const response = await api.get(
-            `http://localhost:8080/api/v1/product/get_product_detail/${productId}`
-          );
-          const product = response.data;
-
-          // Populate basic info
-          const categoryId =
-            product.product_basic_info?.sub_category_response?.category_response?.id?.toString() ||
-            "";
-          setBasicInfo((prev) => ({
-            ...prev,
-            name: product.product_basic_info?.name || "",
-            description: product.product_basic_info?.description || "",
-            categoryId,
-            subCategoryId: "", // Set later after fetching subcategories
-            shopId: product.shop_response?.id?.toString() || "1",
-            discount: product.product_basic_info?.discount || "",
-            notes: product.product_basic_info?.notes || "",
-          }));
-
-          // Fetch subcategories to match sub_category_response.name
-          if (
-            categoryId &&
-            product.product_basic_info?.sub_category_response?.name
-          ) {
-            try {
-              const subResponse = await api.get(
-                `http://localhost:8080/api/v1/sub_category/${categoryId}`
-              );
-              const subCategoriesData = subResponse.data;
-              setSubCategories(subCategoriesData);
-              const matchedSubCategory = subCategoriesData.find(
-                (sub) =>
-                  sub.name ===
-                  product.product_basic_info.sub_category_response.name
-              );
-              if (matchedSubCategory) {
-                setBasicInfo((prev) => ({
-                  ...prev,
-                  subCategoryId: matchedSubCategory.id.toString(),
-                }));
-              } else {
-                toast.error("Không tìm thấy danh mục con phù hợp.");
-              }
-            } catch (err) {
-              toast.error("Không thể tải danh mục con để khớp tên.");
-            }
-          }
-
-          // Set thumbnail and product images
-          setExistingThumbnailUrl(
-            product.product_basic_info?.thumbnail?.avatar_url || null
-          );
-          setExistingProductImages(product.product_images || []);
-
-          // Set category type and categories
-          if (
-            product.product_category_responses
-              ?.product_category_one_level_responses?.length
-          ) {
-            setCategoryType("one-level");
-            setOneLevelCategoryGroup(
-              product.product_category_responses?.product_category_group
-                ?.product_category_group_name ||
-                product.product_category_responses
-                  ?.product_category_one_level_responses[0]?.name ||
-                "Màu"
-            );
-            setOneLevelCategories(
-              product.product_category_responses.product_category_one_level_responses.map(
-                (cat) => ({
-                  value: cat.value || "",
-                  quantity: cat.quantity?.toString() || "",
-                  price: cat.price?.toString() || "",
-                  image: null,
-                  imageUrl: cat.image_url || null,
-                })
-              ) || [{ value: "", quantity: "", price: "", image: null }]
-            );
-          } else if (
-            product.product_category_responses?.product_category_two_level
-              ?.length
-          ) {
-            setCategoryType("two-level");
-            setTwoLevelCategoryGroup(
-              product.product_category_responses?.product_category_group
-                ?.product_category_group_name || ""
-            );
-            setTwoLevelSubCategoryGroup(
-              product.product_category_responses?.sub_product_category_group
-                ?.product_category_group_name || ""
-            );
-            setTwoLevelCategories(
-              product.product_category_responses.product_category_two_level.map(
-                (cat) => ({
-                  parent_product_category:
-                    cat.product_category_response?.name || "",
-                  image: null,
-                  imageUrl: cat.product_category_response?.image_url || null,
-                  child_product_categories:
-                    cat.child_product_category_responses.map((child) => ({
-                      name: child.name || "",
-                      quantity: child.quantity?.toString() || "",
-                      price: child.price?.toString() || "",
-                    })) || [{ name: "", quantity: "", price: "" }],
-                })
-              ) || [
-                {
-                  parent_product_category: "",
-                  image: null,
-                  child_product_categories: [
-                    { name: "", quantity: "", price: "" },
-                  ],
-                },
-              ]
-            );
-          }
-
-          // Set attributes
-          setAttributes(
-            product.product_attribute_value_responses?.map((attr) => ({
-              attributeId: attr.product_attribute_value_id,
-              value: attr.value || "",
-              name: attr.attribute_name || "",
-            })) || []
-          );
-
-          // Set dimensions (fallback to defaults if not provided)
-          setDimensions({
-            weight: product.weight || 10,
-            height: product.height || 20,
-            width: product.width || 12,
-            length: product.length || 30,
-          });
-
-          // Set shipping types
-          setShippingTypes(
-            product.product_shipping_type_responses?.map((type) => ({
-              id: type.shippingType.id,
-              type: type.shippingType.name,
-              enabled: true,
-              cost: type.shippingType.price || null,
-              eta: `${type.shippingType.estimatedTime} ngày` || "",
-              description: type.shippingType.description || "",
-            })) || []
-          );
-        } catch (err) {
-          toast.error("Không thể tải thông tin sản phẩm.");
-        }
-      };
-      fetchProductDetails();
-    }
-  }, [productId]);
-
   // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
@@ -255,9 +86,7 @@ const ProductCreationForm = () => {
             `http://localhost:8080/api/v1/sub_category/${basicInfo.categoryId}`
           );
           setSubCategories(response.data);
-          if (!productId) {
-            setBasicInfo((prev) => ({ ...prev, subCategoryId: "" }));
-          }
+          setBasicInfo((prev) => ({ ...prev, subCategoryId: "" }));
         } catch (err) {
           toast.error("Không thể tải danh mục con.");
           setSubCategories([]);
@@ -270,7 +99,7 @@ const ProductCreationForm = () => {
       setAvailableAttributes([]);
       setAttributes([]);
     }
-  }, [basicInfo.categoryId, productId]);
+  }, [basicInfo.categoryId]);
 
   // Fetch attributes
   useEffect(() => {
@@ -284,15 +113,13 @@ const ProductCreationForm = () => {
           const attributesData = response.data;
           const subAttributes = attributesData.sub_attribute || [];
           setAvailableAttributes(subAttributes);
-          if (!productId) {
-            setAttributes(
-              subAttributes.map((attr) => ({
-                attributeId: attr.attribute_id,
-                value: "",
-                name: attr.attribute_value,
-              }))
-            );
-          }
+          setAttributes(
+            subAttributes.map((attr) => ({
+              attributeId: attr.attribute_id,
+              value: "",
+              name: attr.attribute_value,
+            }))
+          );
         } catch (err) {
           toast.error("Không thể tải thuộc tính sản phẩm.");
           setAvailableAttributes([]);
@@ -306,7 +133,7 @@ const ProductCreationForm = () => {
       setAvailableAttributes([]);
       setAttributes([]);
     }
-  }, [basicInfo.subCategoryId, productId]);
+  }, [basicInfo.subCategoryId]);
 
   // Fetch shipping types
   useEffect(() => {
@@ -315,17 +142,16 @@ const ProductCreationForm = () => {
       try {
         const response = await api.get("/shipping_type");
         const shippingData = response.data;
-        setShippingTypes((prev) => {
-          const newShippingTypes = shippingData.map((type) => ({
+        setShippingTypes(
+          shippingData.map((type) => ({
             type: type.name,
-            enabled: prev.find((p) => p.id === type.id)?.enabled || false,
+            enabled: false,
             cost: null,
             eta: `${type.estimated_time} ngày`,
             id: type.id,
             description: type.description,
-          }));
-          return newShippingTypes;
-        });
+          }))
+        );
       } catch (err) {
         toast.error("Không thể tải danh sách phương thức vận chuyển.");
         setShippingTypes([]);
@@ -392,7 +218,7 @@ const ProductCreationForm = () => {
   const handleFileChange = (e, setFile, isMultiple = false) => {
     const files = isMultiple ? Array.from(e.target.files) : [e.target.files[0]];
     if (files.every((file) => file && file.type.startsWith("image/"))) {
-      setFile(isMultiple ? files : files[0]);
+      setFile((prev) => (isMultiple ? [...prev, ...files] : files[0]));
       setErrors((prev) => ({
         ...prev,
         [isMultiple ? "productImages" : "thumbnail"]: "",
@@ -431,7 +257,7 @@ const ProductCreationForm = () => {
   const addOneLevelCategory = () => {
     setOneLevelCategories([
       ...oneLevelCategories,
-      { value: "", quantity: "", price: "", image: null },
+      { value: "", quantity: "", price: "", image: null, imageUrl: null },
     ]);
   };
 
@@ -484,6 +310,7 @@ const ProductCreationForm = () => {
       {
         parent_product_category: "",
         image: null,
+        imageUrl: null,
         child_product_categories: [{ name: "", quantity: "", price: "" }],
       },
     ]);
@@ -529,9 +356,9 @@ const ProductCreationForm = () => {
       (basicInfo.discount < 0 || basicInfo.discount > 100)
     )
       newErrors.discount = "Khuyến mãi phải từ 0 đến 100%.";
-    if (!thumbnail && !existingThumbnailUrl)
+    if (!thumbnail)
       newErrors.thumbnail = "Vui lòng tải hình ảnh đại diện.";
-    if (productImages.length === 0 && existingProductImages.length === 0)
+    if (productImages.length === 0)
       newErrors.productImages = "Vui lòng tải ít nhất một hình ảnh sản phẩm.";
     if (categoryType === "one-level") {
       if (!oneLevelCategoryGroup)
@@ -539,7 +366,7 @@ const ProductCreationForm = () => {
       if (
         oneLevelCategories.some(
           (cat) =>
-            (!cat.image && !cat.imageUrl) ||
+            !cat.image ||
             !cat.value ||
             !cat.quantity ||
             !cat.price
@@ -556,7 +383,7 @@ const ProductCreationForm = () => {
       if (
         twoLevelCategories.some(
           (cat) =>
-            (!cat.image && !cat.imageUrl) ||
+            !cat.image ||
             !cat.parent_product_category ||
             cat.child_product_categories.some(
               (child) => !child.name || !child.quantity || !child.price
@@ -603,7 +430,6 @@ const ProductCreationForm = () => {
       const productFormData = new FormData();
 
       // Basic info
-      productFormData.append("id", productId || null);
       productFormData.append("name", basicInfo.name);
       productFormData.append("description", basicInfo.description);
       productFormData.append("subcategoryId", basicInfo.subCategoryId);
@@ -612,16 +438,17 @@ const ProductCreationForm = () => {
       if (basicInfo.notes) productFormData.append("notes", basicInfo.notes);
       productFormData.append("shopId", basicInfo.shopId);
 
-      // Thumbnail and product images (only append if new files are selected)
+      // Thumbnail
       if (thumbnail) {
         productFormData.append("thumbnail", thumbnail);
       }
+
+      // Product images
       productImages.forEach((image, index) => {
         if (image instanceof File) {
           productFormData.append(`productImages[${index}]`, image);
         }
       });
-
 
       // Create product
       const createResponse = await api.post(
@@ -633,7 +460,7 @@ const ProductCreationForm = () => {
           },
         }
       );
-      let productIdResponse = createResponse.data;
+      const productIdResponse = createResponse.data;
 
       // Handle categories
       if (categoryType === "one-level") {
@@ -725,17 +552,13 @@ const ProductCreationForm = () => {
 
       Swal.fire({
         icon: "success",
-        title: productId ? "Cập nhật thành công!" : "Thành công!",
-        text: productId
-          ? "Sản phẩm đã được cập nhật thành công!"
-          : "Sản phẩm đã được tạo thành công!",
+        title: "Thành công!",
+        text: "Sản phẩm đã được tạo thành công!",
         confirmButtonText: "OK",
       });
 
       setIsCreating(false);
-      if (!productId) {
-        reloadTheInputAfterCreatingProduct();
-      }
+      reloadTheInputAfterCreatingProduct();
     } catch (err) {
       setIsCreating(false);
       Swal.fire({
@@ -758,12 +581,10 @@ const ProductCreationForm = () => {
       notes: "",
     });
     setThumbnail(null);
-    setExistingThumbnailUrl(null);
     setProductImages([]);
-    setExistingProductImages([]);
     setOneLevelCategoryGroup("");
     setOneLevelCategories([
-      { value: "", quantity: "", price: "", image: null },
+      { value: "", quantity: "", price: "", image: null, imageUrl: null },
     ]);
     setTwoLevelCategoryGroup("");
     setTwoLevelSubCategoryGroup("");
@@ -771,6 +592,7 @@ const ProductCreationForm = () => {
       {
         parent_product_category: "",
         image: null,
+        imageUrl: null,
         child_product_categories: [{ name: "", quantity: "", price: "" }],
       },
     ]);
@@ -782,29 +604,23 @@ const ProductCreationForm = () => {
     setCategoryType("one-level");
   }
 
-  // Toggle collapsible sections
   const toggleSection = (section) =>
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
 
   return (
     <>
       {isCreating && (
-        <EcommerceSpinner
-          text={
-            productId ? "Đang cập nhật sản phẩm ..." : "Đang tạo sản phẩm ..."
-          }
-        />
+        <EcommerceSpinner text="Đang tạo sản phẩm ..." />
       )}
       <DndProvider backend={HTML5Backend}>
         <div className="mx-auto p-5 bg-white min-h-screen font-inter text-base sm:text-lg">
           <Toaster position="top-right" />
           <div className="bg-white rounded-md shadow-md border border-gray-200 p-5 sm:p-6">
             <h2 className="text-3xl font-semibold text-teal-600 mb-6">
-              {productId ? "Chỉnh Sửa Sản Phẩm" : "Tạo Sản Phẩm Mới"}
+              Tạo Sản Phẩm Mới
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Basic Info */}
               <CollapsibleSection
                 title="Thông Tin Cơ Bản"
                 isOpen={openSections.basicInfo}
@@ -942,19 +758,15 @@ const ProductCreationForm = () => {
                       className="w-full px-4 py-2 border border-gray-200 rounded-md bg-white text-gray-800 text-base file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-800 hover:file:bg-gray-200 transition-colors duration-150"
                       aria-label="Hình ảnh đại diện"
                     />
-                    {(thumbnail || existingThumbnailUrl) && (
+                    {thumbnail && (
                       <div className="mt-4 flex items-center space-x-4">
                         <img
-                          src={
-                            thumbnail
-                              ? URL.createObjectURL(thumbnail)
-                              : existingThumbnailUrl
-                          }
+                          src={URL.createObjectURL(thumbnail)}
                           alt="Xem trước hình ảnh đại diện"
                           className="w-24 h-24 object-cover rounded-md border border-gray-200"
                         />
                         <p className="text-base text-gray-600 truncate">
-                          {thumbnail ? thumbnail.name : "Hình ảnh hiện tại"}
+                          {thumbnail.name}
                         </p>
                       </div>
                     )}
@@ -986,31 +798,8 @@ const ProductCreationForm = () => {
                         Kéo thả hoặc nhấp để tải ảnh sản phẩm
                       </label>
                     </div>
-                    {(productImages.length > 0 ||
-                      existingProductImages.length > 0) && (
+                    {productImages.length > 0 && (
                       <div className="mt-4 grid grid-cols-3 gap-4">
-                        {existingProductImages.map((image, index) => (
-                          <div key={`existing-${index}`} className="relative">
-                            <img
-                              src={image.avatar_url}
-                              alt={`Hình ảnh sản phẩm ${index}`}
-                              className="w-24 h-24 object-cover rounded-md border border-gray-200"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setExistingProductImages(
-                                  existingProductImages.filter(
-                                    (_, i) => i !== index
-                                  )
-                                )
-                              }
-                              className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
-                            >
-                              <Trash size={16} />
-                            </button>
-                          </div>
-                        ))}
                         {productImages.map((image, index) => (
                           <DraggableImage
                             key={index}
@@ -1031,7 +820,6 @@ const ProductCreationForm = () => {
                 </div>
               </CollapsibleSection>
 
-              {/* Categories */}
               <CollapsibleSection
                 title="Phân Loại Sản Phẩm"
                 isOpen={openSections.categories}
@@ -1157,21 +945,15 @@ const ProductCreationForm = () => {
                               }
                               className="w-full px-4 py-2 border border-gray-200 rounded-md bg-white text-gray-800 text-base file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-800 hover:file:bg-gray-200 transition-colors duration-150"
                             />
-                            {(cat.image || cat.imageUrl) && (
+                            {cat.image && (
                               <div className="mt-4 flex items-center space-x-4">
                                 <img
-                                  src={
-                                    cat.image
-                                      ? URL.createObjectURL(cat.image)
-                                      : cat.imageUrl
-                                  }
+                                  src={URL.createObjectURL(cat.image)}
                                   alt="Xem trước hình ảnh phân loại"
                                   className="w-24 h-24 object-cover rounded-md border border-gray-200"
                                 />
                                 <p className="text-base text-gray-600 truncate">
-                                  {cat.image
-                                    ? cat.image.name
-                                    : "Hình ảnh hiện tại"}
+                                  {cat.image.name}
                                 </p>
                               </div>
                             )}
@@ -1218,7 +1000,7 @@ const ProductCreationForm = () => {
                             setTwoLevelCategoryGroup(e.target.value)
                           }
                           placeholder="VD: Chất liệu"
-                          className={`border-gray-300 w-full px-4 py-2 border rounded-md bg-white text-gray-800 placeholder-gray-500 text-base leading-6 transition-all duration-150 focus:outline-none focus:border-teal-500  ${
+                          className={`border-gray-300 w-full px-4 py-2 border rounded-md bg-white text-gray-800 placeholder-gray-500 text-base leading-6 transition-all duration-150 focus:outline-none focus:border-teal-500 ${
                             errors.twoLevelCategoryGroup
                               ? "border-red-600"
                               : "border-gray-200"
@@ -1292,21 +1074,15 @@ const ProductCreationForm = () => {
                               }
                               className="w-full px-4 py-2 border border-gray-200 rounded-md bg-white text-gray-800 text-base file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-800 hover:file:bg-gray-200 transition-colors duration-150"
                             />
-                            {(cat.image || cat.imageUrl) && (
+                            {cat.image && (
                               <div className="mt-4 flex items-center space-x-4">
                                 <img
-                                  src={
-                                    cat.image
-                                      ? URL.createObjectURL(cat.image)
-                                      : cat.imageUrl
-                                  }
+                                  src={URL.createObjectURL(cat.image)}
                                   alt="Xem trước hình ảnh phân loại"
                                   className="w-24 h-24 object-cover rounded-md border border-gray-200"
                                 />
                                 <p className="text-base text-gray-600 truncate">
-                                  {cat.image
-                                    ? cat.image.name
-                                    : "Hình ảnh hiện tại"}
+                                  {cat.image.name}
                                 </p>
                               </div>
                             )}
@@ -1436,7 +1212,6 @@ const ProductCreationForm = () => {
                 )}
               </CollapsibleSection>
 
-              {/* Attributes */}
               <CollapsibleSection
                 title="Thuộc Tính Sản Phẩm"
                 isOpen={openSections.attributes}
@@ -1518,7 +1293,6 @@ const ProductCreationForm = () => {
                 )}
               </CollapsibleSection>
 
-              {/* Dimensions */}
               <CollapsibleSection
                 title="Kích Thước Gói Hàng"
                 isOpen={openSections.dimensions}
@@ -1589,7 +1363,7 @@ const ProductCreationForm = () => {
                       value={dimensions.length}
                       onChange={handleDimensionChange}
                       placeholder="VD: 30"
-                      className={`w-full px-4 py-2 border rounded-md bg-white text-gray-800 placeholder-gray-500 text-base leading-6 transition-all duration-150 focus:outline-none focus:border-teal-500 px-2 ${
+                      className={`w-full px-4 py-2 border rounded-md bg-white text-gray-800 placeholder-gray-500 text-base leading-6 transition-all duration-150 focus:outline-none focus:border-teal-500 ${
                         errors.dimensions ? "border-red-600" : "border-gray-200"
                       }`}
                       step="0.01"
@@ -1599,9 +1373,7 @@ const ProductCreationForm = () => {
                   </div>
                 </div>
                 {errors.dimensions && (
-                  <p className="text-red-600 text-sm mt-2">
-                    {errors.dimensions}
-                  </p>
+                  <p className="text-red-600 text-sm mt-2">{errors.dimensions}</p>
                 )}
               </CollapsibleSection>
 
@@ -1681,13 +1453,12 @@ const ProductCreationForm = () => {
                 </div>
               </CollapsibleSection>
 
-              {/* Submit Buttons */}
               <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
                 <button
                   type="submit"
                   className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 text-base font-medium transition-colors duration-200 shadow"
                 >
-                  {productId ? "Cập Nhật Sản Phẩm" : "Đăng Sản Phẩm"}
+                  Đăng Sản Phẩm
                 </button>
               </div>
             </form>

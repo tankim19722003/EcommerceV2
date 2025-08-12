@@ -22,6 +22,12 @@ import ProductList from "./Component/ProductList/ProductList";
 import OrderList from "./Component/Order/OrderList";
 import OrderManagement from "./Component/ShopComponent/OrderManagement";
 import ProductManagement from "./Component/ShopComponent/ProductManagement";
+import AttributeUpdating from "./Component/ShopComponent/ProductUpdating/AttributeUpdating";
+import ShippingUpdating from "./Component/ShopComponent/ProductUpdating/ShippingUpdating";
+import VoucherManager from "./Component/ShopComponent/VoucherManagement/VoucherManagement";
+import UserInfo from "./Component/ShopComponent/UserInfoManagement/UserInfo";
+import UserAddressUpdating from "./Component/ShopComponent/UserInfoManagement/UserAddressUpdating";
+import ProductDiscount from "./Component/ShopComponent/ProductDiscountManagement/ProductDiscount";
 
 export const router = createBrowserRouter([
   {
@@ -35,7 +41,10 @@ export const router = createBrowserRouter([
       { path: "shop-registration", element: <ShopRegistration /> },
       { path: "shop-page", element: <ShopPage /> },
       { path: "products", element: <ProductList/> },
+      { path: "category/:id/products", element: <ProductList/> },
       { path: "orders", element: <OrderList/> },
+      { path: "user-info", element: <UserInfo /> },
+      { path: "user-address-updating", element: <UserAddressUpdating /> },
     ],
   },
   { path: "cart", element: <Cart />, loader: authLoader },
@@ -60,6 +69,11 @@ export const router = createBrowserRouter([
       { path: "product-management", element: <ProductManagement /> },
       { path: "product-creation", element: <ProductCreation /> },
       { path: "order", element: <OrderManagement/> },
+      {path: "product/attribute-updating", element:<AttributeUpdating/>},
+      {path: "product/product-shipping-updating", element:<ShippingUpdating/>},
+      {path: "voucher-management", element:<VoucherManager/>},
+      { path: "product-discount-management", element: <ProductDiscount /> },
+
     ],
   },
   {
